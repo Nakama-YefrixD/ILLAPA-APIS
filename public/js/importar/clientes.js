@@ -1,0 +1,80 @@
+$(document).ready(function() {
+    // var URLactual = window.location.href;
+
+    
+
+
+    $("#subirLista").on("change", function() {
+        event.preventDefault();
+        var formData = new FormData($("#insertarAlumnos")[0]);
+
+        $.ajax({
+            url: "mostrarExcel",
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType:"json",
+                success:function(data)
+                {
+                    if(data.estado != "correcto"){
+                        $('#tabla').html(data.mensaje);
+                        
+                    }else{
+                        $('#tablasasd').html(data.mensaje);
+                        toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
+                    }
+                }
+        })
+    });
+
+
+
+    $('#insertarAlumnos').on('click', '.agregarExcel',function(event){
+        event.preventDefault();
+        var formData = new FormData($("#insertarAlumnos")[0]);
+        var url = $('#seleccionarTipoExcel').val();
+
+            $.confirm({
+            title: 'Agregar excel',
+            icon: 'ti-check-box',
+            theme: 'modern',
+            closeIcon: true,
+            animation: 'scale',
+            type: 'green',
+            content: '¿Estas seguro de agregar este nuevo excel?',
+            buttons: {
+                editMenu: {
+                    text: 'Agregar',
+                    action: function () {
+                        $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        dataType:"json",
+                            success:function(data)
+                            {
+                                if(data.estado != "correcto"){
+                                    
+                                    
+                                }else{
+                                    
+                                    toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
+                                }
+                            }
+                        })
+                            
+                    }
+                },
+                Cancelar: function () {
+                    toastr.warning("La acción fue cancelada");
+                }
+            }
+        });
+
+
+     });
+
+})
