@@ -11,6 +11,7 @@ use App\documentos;
 use App\sectores;
 use App\acciones;
 use App\telefonos;
+use App\direcciones;
 use DB;
 
 class GestionController extends Controller
@@ -429,18 +430,31 @@ class GestionController extends Controller
         $telefonosCliente = telefonos::where('cliente_id', '=', $idCliente)
                                         ->get();
         
+        $direcciones = direcciones::where('cliente_id', '=', $idCliente)
+                                         ->get();
+
         $acciones = acciones::select('acciones.created_at as created_at', 'acciones.descripcion as descripcion',
                                         'ta.nombre as tipoAccion')
                             ->join('tiposAcciones as ta', 'ta.id', '=','acciones.tipoAccion_id')
                             ->where('cliente_id', '=', $idCliente)
                             ->get();
         
-        if(sizeof($telefonosCliente) > 0 &&  sizeof($acciones) > 0){
-            return json_encode(array("code" => true, "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));            
+        if(sizeof($telefonosCliente) > 0 &&  sizeof($acciones) > 0 && sizeof($direcciones) > 0){
+            
+            return json_encode(array("code" => true, "telefonos"=>$telefonosCliente, "direcciones"=>$direcciones ,"acciones" =>$acciones ,"load"=>true ));
+            
+        }else if(sizeof($telefonosCliente) > 0 &&  sizeof($acciones) > 0){
+            return json_encode(array("code" => true, "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));
+        }else if(sizeof($direcciones) > 0 && sizeof($acciones) > 0){
+            return json_encode(array("code" => true, "direcciones"=>$direcciones,"acciones" =>$acciones ,"load"=>true ));
+        }else if(sizeof($direcciones) > 0 && sizeof($telefonosCliente) > 0){
+            return json_encode(array("code" => true, "direcciones"=>$direcciones, "telefonos"=>$telefonosCliente ,"load"=>true ));
         }else if(sizeof($telefonosCliente) > 0){
             return json_encode(array("code" => false, "codeTelefono" => true, "telefonos"=>$telefonosCliente, "load"=>true ));
         }else if(sizeof($acciones) > 0){
             return json_encode(array("code" => false, "codeAcciones" => true, "acciones" =>$acciones, "load"=>true ));
+        }else if(sizeof($direcciones) > 0){
+            return json_encode(array("code" => false, "codeDirecciones" => true, "direcciones"=>$direcciones, "load"=>true ));
         }
 
 
