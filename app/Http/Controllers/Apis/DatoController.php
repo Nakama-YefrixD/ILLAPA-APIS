@@ -526,6 +526,9 @@ class DatoController extends Controller
             $datorecibir = "direccion".$x;
             $direccionCiudad = "direccionCiudad".$x;
             $direccionPostal = "direccionCodigoPostal".$x;
+            $direccionPais = "direccionPais".$x;
+            $direccionLatitud = "direccionLatitud".$x;
+            $direccionLongitud = "direccionLongitud".$x;
 
             $direcciones = new direcciones;
             $direcciones->cliente_id = $idCliente;
@@ -533,12 +536,15 @@ class DatoController extends Controller
             $direcciones->calle = $request->$datorecibir;
             $direcciones->ciudad = $request->$direccionCiudad;
             $direcciones->codigopostal = $request->$direccionPostal;
-            $direcciones->pais = null;
-            $direcciones->latitud = null;
-            $direcciones->longitud = null;
+            $direcciones->pais = $request->$direccionPais;
+            $direcciones->latitud = $request->$direccionLatitud;
+            $direcciones->longitud = $request->$direccionLongitud;
 
             $direcciones->estado = 1;
             $direcciones->save();
+
+
+
         }
         for($y = 0; $y < $contTelefonos; $y++){
             $datorecibir = "telefono".$y;
