@@ -444,11 +444,11 @@ class GestionController extends Controller
             return json_encode(array("code" => true, "telefonos"=>$telefonosCliente, "direcciones"=>$direcciones ,"acciones" =>$acciones ,"load"=>true ));
             
         }else if(sizeof($telefonosCliente) > 0 &&  sizeof($acciones) > 0){
-            return json_encode(array("code" => true, "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));
+            return json_encode(array("code" => true, "codeDireccionesTelefonos" => true, "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));
         }else if(sizeof($direcciones) > 0 && sizeof($acciones) > 0){
-            return json_encode(array("code" => true, "direcciones"=>$direcciones,"acciones" =>$acciones ,"load"=>true ));
+            return json_encode(array("code" => false, "codeDireccionesAcciones" => true, "direcciones"=>$direcciones,"acciones" =>$acciones ,"load"=>true ));
         }else if(sizeof($direcciones) > 0 && sizeof($telefonosCliente) > 0){
-            return json_encode(array("code" => true, "direcciones"=>$direcciones, "telefonos"=>$telefonosCliente ,"load"=>true ));
+            return json_encode(array("code" => false, "codeDireccionesTelefonos" => true, "direcciones"=>$direcciones, "telefonos"=>$telefonosCliente ,"load"=>true ));
         }else if(sizeof($telefonosCliente) > 0){
             return json_encode(array("code" => false, "codeTelefono" => true, "telefonos"=>$telefonosCliente, "load"=>true ));
         }else if(sizeof($acciones) > 0){
