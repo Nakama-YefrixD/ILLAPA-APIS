@@ -14,8 +14,12 @@ use App\tiposDocumentosIdentidad;
 use App\telefonos;
 use App\direcciones;
 use App\correos;
+use App\personas;
+use App\User;
 
-
+use Peru\Jne\Dni;
+use Peru\Sunat\Ruc;
+use Peru\Http\ContextClient;
 
 class datosFreeController extends Controller
 {
@@ -104,6 +108,103 @@ class datosFreeController extends Controller
         }
       
     }
+
+
+
+    public function buscarClientes(Request $request)
+    {
+        
+        $dni = $request->dni;
+        $idSectoristaSeleccionado = $request->idsectoristaSeleccionado;
+        $tipoIdentificacion = $request->tipoIdentificacion;
+        $nombre = $request->nombre;
+        
+
+        if($tipoIdentificacion == 1 ){
+            $cs = new Dni();
+            $cs->setClient(new ContextClient());
+
+            $person = $cs->get($dni);
+            if ($person === false) {
+                // echo $cs->getError();
+                
+                return json_encode(array("code" => false, "existente"=>false , "load"=>true ));
+                exit();
+                
+            }
+            $nombre = $person->nombres." ".$person->apellidoPaterno." ".$person->apellidoMaterno;
+
+        }else if($tipoIdentificacion == 2){
+            $cs = new Ruc();
+            $cs->setClient(new ContextClient());
+
+            $company = $cs->get($dni);
+            if ($company === false) {
+                // echo $cs->getError();
+                
+                return json_encode(array("code" => false, "existente"=>false , "load"=>true ));
+                exit();
+            }
+            
+            $nombre = $company->razonSocial;
+
+        }
+
+        
+
+        $siPersona = personas::where('numeroidentificacion', '=', $dni)
+                                ->first();
+
+                                
+        if($siPersona){
+            
+            $personaId = $siPersona->id;
+            $nombre = $siPersona->nombre;
+            $sectoristas = sectoristas::where('id', '=', $idSectoristaSeleccionado)
+                                        ->get();
+                                        
+            $esMiCliente = 0;
+            foreach($sectoristas as $sectoristasSocio){
+                
+                $sectores = sectores::where('sectorista_id', '=', $sectoristasSocio->id)
+                                        ->get();
+
+                foreach( $sectores as $sectoresSectorista ){
+                    
+                    $correoCliente = User::where('persona_id', '=', $personaId )
+                                            ->get();
+                    foreach($correoCliente as $correoClientes ){
+
+                        $clientes = clientes::select("clientes.id", "clientes.sector_id","tdi.nombre as tipoDocumentoIdentidad" )
+                                            
+                                            ->join('users as u', 'u.id', '=', 'clientes.correo_id')
+                                            ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                            ->where('sector_id', '=', $sectoresSectorista->id)
+                                            ->where('correo_id', '=', $correoClientes->id)
+                                            ->first();
+
+                        if($clientes){
+                            return json_encode(array("code" => true, 
+                                                        "existente"=>true  ,
+                                                        "nombre" => $nombre ,
+                                                        "load"=>true, 
+                                                        "clienteId"=>$clientes->id, 
+                                                        "sectorId"=>$clientes->sector_id,
+                                                        "userId" => $correoClientes->id,
+                                                        "image" => '$clientes->imagen',
+                                                        "tipoDocumentoIdentidad" => $clientes->tipoDocumentoIdentidad,
+
+                                                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        return json_encode(array("code" => false, "existente"=>true , "nombre"=>$nombre, "load"=>true ));
+    }
+
 
     public function mostrarSectores($gestorfreeId)
     {

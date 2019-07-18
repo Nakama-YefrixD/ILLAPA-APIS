@@ -110,6 +110,9 @@ Route::middleware('auth:api')
         ->get('datoFree/clientesTodos/{sectoristaId}', 'Apis\Datos\datosFreeController@mostrarClientes');
 
 Route::middleware('auth:api')
+        ->post('datoFree/buscarClientes', 'Apis\Datos\datosFreeController@buscarClientes');
+
+Route::middleware('auth:api')
         ->get('datoFree/sectoresTodos/{socioId}', 'Apis\Datos\datosFreeController@mostrarSectores');
 
 Route::middleware('auth:api')

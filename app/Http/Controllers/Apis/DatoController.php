@@ -96,8 +96,11 @@ class DatoController extends Controller
         
         $dni = $request->dni;
         $idSocioSeleccionado = $request->idSocioSeleccionado;
+        $tipoIdentificacion = $request->tipoIdentificacion;
 
-        if(strlen($dni) == 8 ){
+        
+
+        if($tipoIdentificacion == 1 ){
             $cs = new Dni();
             $cs->setClient(new ContextClient());
 
@@ -111,7 +114,7 @@ class DatoController extends Controller
             }
             $nombre = $person->nombres." ".$person->apellidoPaterno." ".$person->apellidoMaterno;
 
-        }else{
+        }else if($tipoIdentificacion == 2){
             $cs = new Ruc();
             $cs->setClient(new ContextClient());
 
@@ -132,16 +135,17 @@ class DatoController extends Controller
         $siPersona = personas::where('numeroidentificacion', '=', $dni)
                                 ->first();
 
-
+                                
         if($siPersona){
-
+            
             $personaId = $siPersona->id;
             
             $sectoristas = sectoristas::where('socio_id', '=', $idSocioSeleccionado)
                                         ->get();
+                                        
             $esMiCliente = 0;
             foreach($sectoristas as $sectoristasSocio){
-
+                
                 $sectores = sectores::where('sectorista_id', '=', $sectoristasSocio->id)
                                         ->get();
 
@@ -156,14 +160,22 @@ class DatoController extends Controller
                                             ->first();
 
                         if($clientes){
-                            return json_encode(array("code" => true, "existente"=>true  ,"nombre" => $nombre ,"load"=>true, "clienteId"=>$clientes->id, "sectorId"=>$clientes->sector_id ));
+                            return json_encode(array("code" => true, 
+                                                        "existente"=>true  ,
+                                                        "nombre" => $nombre ,
+                                                        "load"=>true, 
+                                                        "clienteId"=>$clientes->id, 
+                                                        "sectorId"=>$clientes->sector_id,
+                                                        "userId" => $correoClientes->id,
+                                                        "image" => '$clientes->imagen',
+
+                                                            ));
                         }
                     }
-                    
                 }
-
             }
         }
+
         return json_encode(array("code" => false, "existente"=>true , "nombre"=>$nombre, "load"=>true ));
     }
 
@@ -264,7 +276,11 @@ class DatoController extends Controller
             $direcciones->longitud = $request->$direccionLongitud;
 
             $direcciones->estado = 1;
-            $direcciones->save();
+            
+            if($direcciones->save()){
+               
+            }
+
         }
         for($y = 0; $y < $contTelefonos; $y++){
             $datorecibir = "telefono".$y;
@@ -278,7 +294,9 @@ class DatoController extends Controller
             $telefonos->numero = $request->$datorecibir;
             $telefonos->tipo = $request->$telefonoTipo;
             $telefonos->estado = 1;
-            $telefonos->save();
+            if($telefonos->save()){
+                
+            }
         }
         for($z = 0; $z < $contCorreos; $z++){
             $datorecibir = "correo".$z;
@@ -288,7 +306,9 @@ class DatoController extends Controller
             $correos->correo_id = $userId;
             $correos->correo = $request->$datorecibir;
             $correos->estado = 1;
-            $correos->save();
+            if($correos->save()){
+
+            }
         }
        
         return json_encode(array("estado" => true ));
@@ -541,7 +561,9 @@ class DatoController extends Controller
             $direcciones->longitud = $request->$direccionLongitud;
 
             $direcciones->estado = 1;
-            $direcciones->save();
+            if($direcciones->save()){
+               
+            }
 
 
 
@@ -558,7 +580,13 @@ class DatoController extends Controller
             $telefonos->numero = $request->$datorecibir;
             $telefonos->tipo = $request->$telefonoTipo;
             $telefonos->estado = 1;
-            $telefonos->save();
+            if(!$telefonos->save()){
+                return json_encode(array("estado" => false ));
+            }else{
+                return json_encode(array("estado" => false ));
+            }
+
+
         }
         for($z = 0; $z < $contCorreos; $z++){
             $datorecibir = "correo".$z;
@@ -568,7 +596,11 @@ class DatoController extends Controller
             $correos->correo_id = $userId;
             $correos->correo = $request->$datorecibir;
             $correos->estado = 1;
-            $correos->save();
+            if($correos->save()){
+                
+            }
+
+
         }
        
         return json_encode(array("estado" => true ));
