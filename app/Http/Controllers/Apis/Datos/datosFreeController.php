@@ -257,11 +257,21 @@ class datosFreeController extends Controller
 
     public function agregarImagenCliente(Request $request)
     {
-        $imagen = $request->imagen;
+        $idCliente = $request->idCliente;
+        $imagen = $request->image;
+        $nombre = $request->nombre;
         $real = base64_decode($imagen);
-        file_put_contents('xd.jpg', $real);
+        $ubicacion = "imagenes_clientes/".$nombre;
+        file_put_contents($ubicacion,$real);
+
+        $documento = clientes::find($idCliente);
+        $documento->imagen = "$ubicacion";
+        $documento->update();
+
+
         
-
-
     }
+
+
+    
 }
