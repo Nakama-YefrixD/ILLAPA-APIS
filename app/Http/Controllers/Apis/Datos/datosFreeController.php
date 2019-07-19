@@ -16,6 +16,8 @@ use App\direcciones;
 use App\correos;
 use App\personas;
 use App\User;
+use App\tiposTelefonos;
+
 
 use Peru\Jne\Dni;
 use Peru\Sunat\Ruc;
@@ -223,6 +225,10 @@ class datosFreeController extends Controller
         $direcciones = direcciones::where('cliente_id', '=', $idCliente)->get();
         $correos = correos::where('cliente_id', '=', $idCliente)->get();
 
+        $tiposTelefonos = tiposTelefonos::select('id','nombre')
+                                        ->where('estado','=',1)
+                                        ->get();
+
 
         if(sizeof($telefonos) > 0){
             $codeTelefonos = true;
@@ -249,7 +255,8 @@ class datosFreeController extends Controller
             "codeDirecciones"=>$codeDirecciones,
             "direcciones"=>$direcciones,
             "codeCorreos"=>$codeCorreos,
-            "correos"=>$correos
+            "correos"=>$correos,
+            "tiposTelefonos"=>$tiposTelefonos
 
         ));
 
