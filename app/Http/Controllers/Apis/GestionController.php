@@ -434,9 +434,11 @@ class GestionController extends Controller
                                          ->get();
 
         $acciones = acciones::select('acciones.created_at as created_at', 'acciones.descripcion as descripcion',
-                                        'ta.nombre as tipoAccion')
+                                        'ta.nombre as tipoAccion', 'acciones.fechacompromiso', 'acciones.importecompromiso',
+                                        'acciones.fechaprorroga', 'acciones.fechahoraalarma' )
                             ->join('tiposAcciones as ta', 'ta.id', '=','acciones.tipoAccion_id')
                             ->where('cliente_id', '=', $idCliente)
+                            ->orderby('acciones.created_at', 'desc')
                             ->get();
         
         if(sizeof($telefonosCliente) > 0 &&  sizeof($acciones) > 0 && sizeof($direcciones) > 0){
@@ -466,6 +468,7 @@ class GestionController extends Controller
         $clienteId = $request->clienteId;
         $tipoAccion = $request->tipoAccion;
         $descripcion = $request->descripcion;
+        $fechaActualSistema = $request->fechaActualSistema;
         
         // $idDocumento = $request->documentoId;
         $compromisoPago = $request->compromisoPago;
@@ -525,7 +528,9 @@ class GestionController extends Controller
         $accionCliente->flagalarma = $alerta;
         $accionCliente->fechahoraalarma = $fechaAlerta;  // 1970-01-01 00:00:01
         $accionCliente->estado = 1;
-
+        
+        
+        $accionCliente->created_at = $fechaActualSistema;
         $accionCliente->save();
 
     }

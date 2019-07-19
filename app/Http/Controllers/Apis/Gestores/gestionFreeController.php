@@ -122,7 +122,7 @@ class gestionFreeController extends Controller
                                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
                                                         ->where('clientes.id', '=', $clientesSectoristas->clienteId)
                                                         ->where('d.fechavencimiento', $signo, $fecha )
-
+                                                        ->where('d.saldo', '>' , 0 )
                                                         ->groupBy('clientes.id')
                                                         ->first();
 
@@ -307,7 +307,9 @@ class gestionFreeController extends Controller
 
     public function todosDocumentos($sectoristaId)
     {
-        $documentosClientesSectoristaFree = documentos::select("documentos.*")
+        $documentosClientesSectoristaFree = documentos::select("documentos.*", 'td.nombre as tipoDocumentoIdentidad', 'tm.nombre as moneda')
+                                                ->join('tiposDocumentos as td','td.id', '=', 'documentos.tipoDocumento_id' )
+                                                ->join('tiposMonedas as tm','tm.id', '=', 'documentos.tipoMoneda_id' )
                                                 ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                 ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                 ->where('sct.id', '=', $sectoristaId)
@@ -328,9 +330,10 @@ class gestionFreeController extends Controller
         
         $cont = 0;
         foreach($documentosClientesSectoristaFree as $documentosClientesSectoristaFrees){
-            
-
-            $pagosDocumentoCliente = pagos::where('documento_id', '=', $documentosClientesSectoristaFrees->id)
+        
+            $pagosDocumentoCliente = pagos::select("pagos.*", 'tp.nombre as tipoPago')
+                                            ->where('documento_id', '=', $documentosClientesSectoristaFrees->id)
+                                            ->join('tiposPagos as tp', 'tp.id', '=', 'pagos.tipoPago_id')    
                                             ->get();
 
             foreach($pagosDocumentoCliente as $pagosDocumentoClientes){
@@ -340,6 +343,7 @@ class gestionFreeController extends Controller
                 $listaPagosClientesSectoristaFree[$cont]['pagosImporte'] = $pagosDocumentoClientes->importe;
                 $listaPagosClientesSectoristaFree[$cont]['pagosTipo'] = $pagosDocumentoClientes->tipo;
                 $listaPagosClientesSectoristaFree[$cont]['pagosNumero'] = $pagosDocumentoClientes->numero;
+                $listaPagosClientesSectoristaFree[$cont]['tipoPago'] = $pagosDocumentoClientes->tipoPago;
                 $cont = $cont+1;
             }
             
