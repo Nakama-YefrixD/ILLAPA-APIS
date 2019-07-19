@@ -18,6 +18,7 @@ class Clientes extends Migration
             // $table->unsignedInteger('socio_id');
             $table->unsignedBigInteger('sector_id');
             $table->unsignedBigInteger('correo_id');
+            $table->string('imagen', 100)->default('https://cdn.pixabay.com/photo/2015/03/04/22/35/head-659651_960_720.png');
             $table->integer('estado');
             $table->timestamps();
 
