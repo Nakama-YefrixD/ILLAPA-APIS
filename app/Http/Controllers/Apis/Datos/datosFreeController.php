@@ -265,7 +265,7 @@ class datosFreeController extends Controller
         file_put_contents($ubicacion,$real);
 
         $documento = clientes::find($idCliente);
-        $documento->imagen = "$ubicacion";
+        $documento->imagen = $ubicacion;
         $documento->update();
 
 
