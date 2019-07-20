@@ -32,7 +32,7 @@ class estadisticasFreeController extends Controller
                                                 "u.email as userEmail", 
                                                 "tdi.nombre as personaTipoIdentificacion",
                                                 "p.numeroidentificacion as personaNumeroIdentificacion",
-                                            'scts.id as sectoristaId', 'p.nombre as personaNombre', "p.imagen as personaImagen")
+                                            'scts.id as sectoristaId', 'p.nombre as personaNombre', "clientes.imagen as personaImagen")
                             ->join('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                             ->join('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
                             ->join('users as u', 'u.id', '=', 'clientes.correo_id')

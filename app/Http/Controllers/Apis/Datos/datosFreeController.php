@@ -34,14 +34,14 @@ class datosFreeController extends Controller
 
         $fechaActual = date('Y-m-d');
         $sectoristarDatos = sectoristas::select( "sectoristas.correo_id as sectoristaCorreo",
-                                            "sct.id as sectorId",
-                                            "p.nombre as personaNombre", 
-                                            "p.imagen as personaImagen")
-                            ->join('sectores as sct', 'sct.sectorista_id', '=', 'sectoristas.id')
-                            ->join('users as u', 'u.id', '=', 'sectoristas.correo_id')
-                            ->join('personas as p', 'p.id', '=', 'u.persona_id')
-                            ->where('sectoristas.id', '=', $sectoristaId)
-                            ->first();
+                                                    "sct.id as sectorId",
+                                                    "p.nombre as personaNombre", 
+                                                    "p.imagen as personaImagen")
+                                        ->join('sectores as sct', 'sct.sectorista_id', '=', 'sectoristas.id')
+                                        ->join('users as u', 'u.id', '=', 'sectoristas.correo_id')
+                                        ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                        ->where('sectoristas.id', '=', $sectoristaId)
+                                        ->first();
 
         $numeroDocumentosSectoristaFree = documentos::select("documentos.id")
                                                 ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
@@ -77,7 +77,7 @@ class datosFreeController extends Controller
                                                 "tdi.nombre as tipoDocumentoIdentidad",
                                                 "p.numeroidentificacion as personaNumeroIdentificacion",
                                                 'scts.id as sectoristaId', 'p.nombre as personaNombre', 
-                                                'p.imagen as personaImagen') 
+                                                'clientes.imagen as personaImagen') 
                                             ->join('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                                             ->join('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
                                             ->join('users as u', 'u.id', '=', 'clientes.correo_id')
@@ -216,12 +216,24 @@ class datosFreeController extends Controller
         $sectores = sectores::where('id', '=', $gestorFree->sector_id)
                             ->get();
 
-        return json_encode(array("code" => true, "sectores"=>$sectores, "load"=>true ));
+        $tiposTelefonos = tiposTelefonos::select('id','nombre')
+                                        ->where('estado','=',1)
+                                        ->get();
+
+        return json_encode(array("code" => true, 
+                                    "sectores"=>$sectores, 
+                                    "load"=>true,
+                                    "tiposTelefonos"=>$tiposTelefonos));
     }
 
     public function clienteDatos($idCliente)
     {
-        $telefonos = telefonos::where('cliente_id', '=', $idCliente)->get();
+        $telefonos = telefonos::select("telefonos.prefijo", "telefonos.numero", "tt.nombre as tipo")
+                                ->where('cliente_id', '=', $idCliente)
+                                ->join('tiposTelefonos as tt', 'tt.id','=','telefonos.tipotelefono_id')                        
+                                ->get();
+
+
         $direcciones = direcciones::where('cliente_id', '=', $idCliente)->get();
         $correos = correos::where('cliente_id', '=', $idCliente)->get();
 

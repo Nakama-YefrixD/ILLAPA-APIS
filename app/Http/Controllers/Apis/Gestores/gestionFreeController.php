@@ -58,7 +58,7 @@ class gestionFreeController extends Controller
 
         $clientesSectorista = clientes::select('clientes.estado as clientesEstado', 'clientes.id as clienteId',
                                                     'scts.id as sectoristaId', 'p.nombre as personaNombre', 
-                                                    "p.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
+                                                    "clientes.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
                                                     DB::raw("SUM(d.importe) as sumaImportesDocumentos") )
                                         ->leftjoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                                         ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
@@ -216,7 +216,7 @@ class gestionFreeController extends Controller
 
         $clientesSectorista = clientes::select('clientes.estado as clientesEstado', 'clientes.id as clienteId',
                                                     'scts.id as sectoristaId', 'p.nombre as personaNombre', 
-                                                    "p.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
+                                                    "clientes.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
                                                     DB::raw("SUM(d.importe) as sumaImportesDocumentos") )
                                         ->leftjoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                                         ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')

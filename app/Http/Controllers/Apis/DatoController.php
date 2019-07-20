@@ -194,9 +194,6 @@ class DatoController extends Controller
         $nombre = $request->nombre;
         $idSector = $request->idSector;
 
-
-        
-
         $siPersona = personas::where('numeroidentificacion', '=', $dni)
                                 ->first();
         if($siPersona){
@@ -247,6 +244,7 @@ class DatoController extends Controller
         $cliente = new clientes;
         $cliente->sector_id = $idSector;
         $cliente->correo_id = $userId;
+        $cliente->imagen = 'imagenes_clientes/clientes.png';
         $cliente->estado = 1;
         $cliente->save();
         $idCliente = $cliente->id;
@@ -292,7 +290,7 @@ class DatoController extends Controller
             $telefonos->correo_id = $userId;
             $telefonos->prefijo = $request->$telefonoPrefijo;
             $telefonos->numero = $request->$datorecibir;
-            $telefonos->tipo = $request->$telefonoTipo;
+            $telefonos->tipotelefono_id = $request->$telefonoTipo;
             $telefonos->estado = 1;
             if($telefonos->save()){
                 
@@ -434,7 +432,7 @@ class DatoController extends Controller
                                             "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personatipoDocumentoIdentidad_id",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "tdi.nombre as tipoDocumentoIdentidad",
-                                            'p.nombre as personaNombre', 'p.imagen as personaImagen')
+                                            'p.nombre as personaNombre', 'clientes.imagen as personaImagen')
                             ->join('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                             ->join('socios as s', 's.id', '=', 'sct.socio_id')
 
@@ -494,7 +492,7 @@ class DatoController extends Controller
                                             'clientes.id as clienteId',
                                             "u.email as userEmail", "tdi.nombre as personatipoDocumentoIdentidad_id",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
-                                            'p.nombre as personaNombre', 'p.imagen as personaImagen')
+                                            'p.nombre as personaNombre', 'clientes.imagen as personaImagen')
                                             
                             ->join('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                             ->join('socios as s', 's.id', '=', 'sct.socio_id')
@@ -578,12 +576,10 @@ class DatoController extends Controller
             $telefonos->correo_id = $userId;
             $telefonos->prefijo = $request->$telefonoPrefijo;
             $telefonos->numero = $request->$datorecibir;
-            $telefonos->tipo = $request->$telefonoTipo;
+            $telefonos->tipotelefono_id = $request->$telefonoTipo;
             $telefonos->estado = 1;
-            if(!$telefonos->save()){
-                return json_encode(array("estado" => false ));
-            }else{
-                return json_encode(array("estado" => false ));
+            if($telefonos->save()){
+                
             }
 
 

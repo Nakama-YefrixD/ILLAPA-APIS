@@ -121,7 +121,7 @@ class EstadisticaController extends Controller
         // $sociosEmpresa = socios::where('empresa_id', '=', $empresaid)->get();
         $clienteSocio = clientes::select('clientes.estado as clientesEstado', 's.id as socioId', 
                                             'clientes.sector_id as sector_id',
-                                            'clientes.id as clienteId', 'p.imagen as personaImagen',
+                                            'clientes.id as clienteId', 'clientes.imagen as personaImagen',
                                             "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             'p.nombre as personaNombre')

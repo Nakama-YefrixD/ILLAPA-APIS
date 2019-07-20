@@ -336,7 +336,7 @@ class GestionController extends Controller
     {
 
         $clienteSocio = clientes::select('clientes.estado as clientesEstado', 's.id as socioId', 
-                                            'p.nombre as personaNombre', "p.imagen as personaImagen",
+                                            'p.nombre as personaNombre', "clientes.imagen as personaImagen",
                                             "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "tdi.nombre as tipoDocumentoIdentidad",
                                             'p.numeroidentificacion as personaNumeroIdentificacion')
@@ -457,6 +457,8 @@ class GestionController extends Controller
             return json_encode(array("code" => false, "codeAcciones" => true, "acciones" =>$acciones, "load"=>true ));
         }else if(sizeof($direcciones) > 0){
             return json_encode(array("code" => false, "codeDirecciones" => true, "direcciones"=>$direcciones, "load"=>true ));
+        }else{
+            return json_encode(array("code" => false, "codeNada" => true, "load"=>true ));
         }
 
 

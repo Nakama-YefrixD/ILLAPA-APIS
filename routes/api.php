@@ -47,7 +47,10 @@ Route::middleware('auth:api')->post('/agregarAccion', 'Apis\GestionController@ag
 Route::middleware('auth:api')
         ->get('gestionFree/clientesTodos/{sectoristaId}', 'Apis\Gestores\gestionFreeController@mostrarClientes');
 
-        Route::middleware('auth:api')
+Route::middleware('auth:api')
+        ->get('gestionFree/clientesTodosExcepcion/{sectoristaId}', 'Apis\Gestores\gestionFreeController@mostrarClientesTODO');
+
+Route::middleware('auth:api')
         ->get('gestionFree/documentosTodos/{sectoristaId}', 'Apis\Gestores\gestionFreeController@todosDocumentos');
 
 // VENCIMIENTOS
