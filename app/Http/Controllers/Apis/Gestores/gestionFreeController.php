@@ -13,6 +13,9 @@ use App\acciones;
 
 use DB;
 
+// VERSION 1.0
+
+
 class gestionFreeController extends Controller
 {
     public function mostrarClientes($sectoristaId)
