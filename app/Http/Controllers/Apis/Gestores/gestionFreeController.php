@@ -13,7 +13,7 @@ use App\acciones;
 
 use DB;
 
-// VERSION 1.0
+// VERSION 2.0
 
 
 class gestionFreeController extends Controller

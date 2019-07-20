@@ -194,6 +194,10 @@ class DatoController extends Controller
         $nombre = $request->nombre;
         $idSector = $request->idSector;
 
+        $imagen = $request->image;
+        $nombreImagen = $request->nombreImagen;
+
+
         $siPersona = personas::where('numeroidentificacion', '=', $dni)
                                 ->first();
         if($siPersona){
@@ -240,11 +244,17 @@ class DatoController extends Controller
             $userId = $userCliente->id;
 
         }
+        $ubicacion = 'imagenes_clientes/clientes.png';
+        if($imagen != null){
+            $real = base64_decode($imagen);
+            $ubicacion = "imagenes_clientes/".$nombreImagen;
+            file_put_contents($ubicacion,$real);
+        }
 
         $cliente = new clientes;
         $cliente->sector_id = $idSector;
         $cliente->correo_id = $userId;
-        $cliente->imagen = 'imagenes_clientes/clientes.png';
+        $cliente->imagen = $ubicacion;
         $cliente->estado = 1;
         $cliente->save();
         $idCliente = $cliente->id;
