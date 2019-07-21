@@ -194,8 +194,7 @@ class DatoController extends Controller
         $nombre = $request->nombre;
         $idSector = $request->idSector;
 
-        $imagen = $request->image;
-        $nombreImagen = $request->nombreImagen;
+        
 
 
         $siPersona = personas::where('numeroidentificacion', '=', $dni)
@@ -245,11 +244,7 @@ class DatoController extends Controller
 
         }
         $ubicacion = 'imagenes_clientes/clientes.png';
-        if($imagen != null){
-            $real = base64_decode($imagen);
-            $ubicacion = "imagenes_clientes/".$nombreImagen;
-            file_put_contents($ubicacion,$real);
-        }
+        
 
         $cliente = new clientes;
         $cliente->sector_id = $idSector;
@@ -319,7 +314,7 @@ class DatoController extends Controller
             }
         }
        
-        return json_encode(array("estado" => true ));
+        return json_encode(array("estado" => true, "idClienteNuevo"=>$idCliente ));
 
     }
 
