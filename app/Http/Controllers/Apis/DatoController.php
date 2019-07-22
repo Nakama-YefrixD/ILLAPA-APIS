@@ -612,6 +612,34 @@ class DatoController extends Controller
 
     }
 
+    public function eliminarDireccion(Request $request){
+        
+        $direccion = direcciones::find($request->id);
+        if($direccion->delete()){
+            return json_encode(array("code"=>true ));
+        }else{
+            return json_encode(array("code"=>false ));
+        }
+    }
+
+    public function eliminarTelefonos(Request $request){
+        $telefonos = telefonos::find($request->id);
+        if($telefonos->delete()){
+            return json_encode(array("code"=>true ));
+        }else{
+            return json_encode(array("code"=>false ));
+        }
+    }
+
+    public function eliminarCorreos(Request $request){
+        $correos = correos::find($request->id);
+        if($correos->delete()){
+            return json_encode(array("code"=>true ));
+        }else{
+            return json_encode(array("code"=>false ));
+        }
+    }
+
     
 
 }   

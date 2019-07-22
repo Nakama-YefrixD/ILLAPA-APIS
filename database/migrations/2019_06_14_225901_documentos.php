@@ -23,8 +23,8 @@ class Documentos extends Migration
             $table->date('fechavencimiento');
             // $table->string('moneda', 3);
             $table->unsignedBigInteger('tipoMoneda_id');
-            $table->decimal('importe');
-            $table->decimal('saldo');
+            $table->decimal('importe', 10,2);
+            $table->decimal('saldo', 10,2);
             $table->integer('estado');
             $table->timestamps();
 

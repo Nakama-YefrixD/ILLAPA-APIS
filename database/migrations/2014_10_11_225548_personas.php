@@ -17,7 +17,7 @@ class Personas extends Migration
             $table->bigIncrements('id');
             // $table->integer('tipoidentificacion')->nullable();
             $table->unsignedBigInteger('tipoDocumentoIdentidad_id');
-            $table->integer('numeroidentificacion')->nullable();
+            $table->bigInteger('numeroidentificacion')->nullable();
             $table->string('nombre')->nullable();
             $table->string('imagen', 100)->default('https://cdn.pixabay.com/photo/2015/03/04/22/35/head-659651_960_720.png');
             $table->integer('estado')->nullable();

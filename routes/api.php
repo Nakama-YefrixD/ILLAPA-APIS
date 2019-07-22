@@ -107,6 +107,9 @@ Route::middleware('auth:api')->get('dato/clienteDocumentos/{clienteid}', 'Apis\D
 Route::middleware('auth:api')->get('dato/clienteDocumentoPagos/{clienteid}', 'Apis\DatoController@mostrarClienteDocumentoPagos');
 
 
+Route::middleware('auth:api')->post('dato/eliminarDireccion', 'Apis\DatoController@eliminarDireccion');
+Route::middleware('auth:api')->post('dato/eliminarTelefono', 'Apis\DatoController@eliminarTelefonos');
+Route::middleware('auth:api')->post('dato/eliminarCorreos', 'Apis\DatoController@eliminarCorreos');
 
 // DATOS FREE
 Route::middleware('auth:api')

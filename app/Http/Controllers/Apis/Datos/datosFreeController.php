@@ -228,7 +228,7 @@ class datosFreeController extends Controller
 
     public function clienteDatos($idCliente)
     {
-        $telefonos = telefonos::select("telefonos.prefijo", "telefonos.numero", "tt.nombre as tipo")
+        $telefonos = telefonos::select("telefonos.prefijo", "telefonos.numero", "tt.nombre as tipo", "telefonos.id as id")
                                 ->where('cliente_id', '=', $idCliente)
                                 ->join('tiposTelefonos as tt', 'tt.id','=','telefonos.tipotelefono_id')                        
                                 ->get();
