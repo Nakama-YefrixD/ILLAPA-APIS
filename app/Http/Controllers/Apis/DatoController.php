@@ -289,10 +289,12 @@ class DatoController extends Controller
             $datorecibir = "telefono".$y;
             $telefonoPrefijo = "telefonoPrefijo".$y;
             $telefonoTipo = "telefonoTipo".$y;
+            $telefonoPais = "telefonoPais".$y;
 
             $telefonos = new telefonos;
             $telefonos->cliente_id = $idCliente;
             $telefonos->correo_id = $userId;
+            $telefonos->pais = $request->$telefonoPais;
             $telefonos->prefijo = $request->$telefonoPrefijo;
             $telefonos->numero = $request->$datorecibir;
             $telefonos->tipotelefono_id = $request->$telefonoTipo;
@@ -575,9 +577,11 @@ class DatoController extends Controller
             $datorecibir = "telefono".$y;
             $telefonoPrefijo = "telefonoPrefijo".$y;
             $telefonoTipo = "telefonoTipo".$y;
+            $telefonoPais = "telefonoPais".$y;
 
             $telefonos = new telefonos;
             $telefonos->cliente_id = $idCliente;
+            $telefonos->pais = $request->$telefonoPais;
             $telefonos->correo_id = $userId;
             $telefonos->prefijo = $request->$telefonoPrefijo;
             $telefonos->numero = $request->$datorecibir;

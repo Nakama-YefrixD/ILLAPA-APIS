@@ -18,6 +18,7 @@ class Telefonos extends Migration
             // $table->unsignedBigInteger('socio_id');
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('correo_id');
+            $table->string('pais', 45)->nullable();
             $table->string('prefijo', 45)->nullable();
             $table->integer('numero');
             $table->unsignedBigInteger('tipotelefono_id');
