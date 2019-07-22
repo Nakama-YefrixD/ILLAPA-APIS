@@ -3,34 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use Response;
-use Auth;
-use App\sectores;
-use App\personas;
-use App\User;
-use App\clientes;
-use App\correos;
-use App\telefonos;
-use App\direcciones;
-use App\documentos;
-use App\empresas;
-use App\tiposDocumentosIdentidad;
-use App\socios;
-use App\tiposTelefonos;
-use App\tiposMonedas;
-use App\tiposDocumentos;
-use App\tiposPagos;
-use App\pagos;
-
-
-class importarController extends Controller
+class importarFree extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth');
@@ -152,11 +127,12 @@ class importarController extends Controller
             $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
             $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
             $userId = Auth::id();
-            $empresa = empresas::where('correo_id','=',$userId)
+            $sectorId = sectores::select('sectores.id as sectorId')
+                                ->join('sectoristas as scts','scts.id', '=','sectores.sectorista_id')
+                                ->join('users as u', 'u.id', '=', 'scts.correo_id')
+                                ->where('u.id', '=',$userId )
+                                ->where('sectores.estado', '=', 1 )
                                 ->first();
-            
-
-           
             
 
             for ($i=2; $i <= $numRows ; $i++) {
@@ -164,39 +140,23 @@ class importarController extends Controller
                 $tipoIdentificacion = $objPHPExcel->getActiveSheet()->getCell('a'.$i)->getCalculatedValue();
                 $numeroIdentificacion = $objPHPExcel->getActiveSheet()->getCell('b'.$i)->getCalculatedValue();
                 $nombre = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
-                $sectorNombre = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
                 
-
-                $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
-                
-                if(!$tiposDocumentosIdentidad){
+                if($tipoIdentificacion != "DNI" && $tipoIdentificacion != "RUC"){
                     break;
                 }
+            
 
-                $socios = socios::where('empresa_id','=',$empresa->id)
-                                ->get();
 
-                $sectorId = null;
-                foreach($socios as $socio){
-                    $sector = sectores::where('socio_id','=', $socio->id)
-                                        ->where('descripcion','=', $sectorNombre)
-                                        ->first();
-                    if($sector){
-                       $sectorId = $sector->id; 
-                       
-                    }
+                if(strlen($tipoIdentificacion) == "DNI"  ){
+                    $identificadorRucDni = 1;
+        
+                }else{
+        
+                    $identificadorRucDni = 2;
                 }
-                
-                if($sectorId == null){
-                    break;
-                }
-                
 
                 $siPersona = personas::where('numeroidentificacion', '=', $numeroIdentificacion)
                                     ->first();
-
-
 
                 if($siPersona){
 
@@ -206,13 +166,12 @@ class importarController extends Controller
                     if($exisUser){
                         $userId = $exisUser->id;
                         $exisCliente= clientes::where('correo_id', '=', $userId )
-                                                ->where('sector_id','=',$sectorId)
-                                                ->first();
+                                                    ->first();
                         if($exisCliente){
 
                         }else{
                             $cliente = new clientes;
-                            $cliente->sector_id = $sectorId;
+                            $cliente->sector_id = $sectorId->sectorId;
                             $cliente->correo_id = $userId;
                             $cliente->estado = 1;
                             $cliente->save();
@@ -234,7 +193,7 @@ class importarController extends Controller
                         $userId = $userCliente->id;
 
                         $cliente = new clientes;
-                        $cliente->sector_id = $sectorId;
+                        $cliente->sector_id = $sectorId->sectorId;
                         $cliente->correo_id = $userId;
                         $cliente->estado = 1;
                         $cliente->save();
@@ -244,7 +203,7 @@ class importarController extends Controller
                 }else{
 
                     $personas = new personas;
-                    $personas->tipoDocumentoIdentidad_id = $tiposDocumentosIdentidad->id;
+                    $personas->tipoidentificacion = $identificadorRucDni;
                     $personas->numeroidentificacion = $numeroIdentificacion;
                     $personas->nombre = $nombre;
                     $personas->imagen = 'https://cdn.pixabay.com/photo/2016/06/03/15/35/customer-service-1433640_960_720.png';
@@ -260,23 +219,35 @@ class importarController extends Controller
                     $userCliente->email_verified_at = null;
                     $userCliente->password = Hash::make('illapa123');
                     $userCliente->api_token = Str::random(60);
+                    
                     $userCliente->save();
                     $userId = $userCliente->id;
 
                     $cliente = new clientes;
-                    $cliente->sector_id = $sectorId;
+                    $cliente->sector_id = $sectorId->sectorId;
                     $cliente->correo_id = $userId;
                     $cliente->estado = 1;
                     $cliente->save();
                     $idCliente = $cliente->id;
 
                 }
+
+                
+                
+                
+
             }
+        
+        
+
         
         $output = array(
             'estado'     =>  'correcto',
             'mensaje'   => 'bien'
         );
+    
+        
+    
 
         echo json_encode($output);
 
@@ -292,26 +263,34 @@ class importarController extends Controller
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
         $userId = Auth::id();
-        $empresa = empresas::where('correo_id','=',$userId)
-                                ->first();
-        
-        
+
+        $sectorId = sectores::select('sectores.id as sectorId')
+                            ->join('sectoristas as scts','scts.id', '=','sectores.sectorista_id')
+                            ->join('users as u', 'u.id', '=', 'scts.correo_id')
+                            ->where('u.id', '=',$userId )
+                            ->where('sectores.estado', '=', 1 )
+                            ->first();
 
         for ($i=2; $i <= $numRows ; $i++) {
             $tipoIdentificacion = $objPHPExcel->getActiveSheet()->getCell('a'.$i)->getCalculatedValue();
             $numeroIdentificacion = $objPHPExcel->getActiveSheet()->getCell('b'.$i)->getCalculatedValue();
             $correo = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
-            
-            $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
-                
-            if(!$tiposDocumentosIdentidad){
+
+            if($tipoIdentificacion != "DNI" && $tipoIdentificacion != "RUC"){
                 break;
             }
 
+            if($tipoIdentificacion == "DNI"  ){
+                $identificadorRucDni = 1;
+    
+            }else{
+    
+                $identificadorRucDni = 2;
+            }
+
             $siPersona = personas::where('numeroidentificacion', '=', $numeroIdentificacion)
-                                    ->where('tipoDocumentoIdentidad_id', '=', $tiposDocumentosIdentidad->id)
-                                    ->first();
+                                // ->where('tipoidentificacion', '=', $identificadorRucDni )
+                                ->first();
             
             if($siPersona){
                 $personaId = $siPersona->id;
@@ -319,33 +298,22 @@ class importarController extends Controller
                                                 ->first();
                 if($exisUser){
                     $userId = $exisUser->id;
+                    $exisCliente= clientes::where('correo_id', '=', $userId )
+                                            ->where('sector_id', '=', $sectorId->sectorId)
+                                            ->first();
+                    if($exisCliente){
 
-                    $socios = socios::where('empresa_id','=',$empresa->id)
-                                    ->get();
-                    
-                    foreach($socios as $socio){
-                        $sectores = sectores::where('socio_id','=',$socio->id)
-                                                ->get();
+                        
+                        $correos = new correos;
+                        $correos->cliente_id = $exisCliente->id;
+                        $correos->correo_id = $userId;
+                        $correos->correo = $correo;
+                        $correos->estado = 1;
+                        $correos->save();
 
-                        foreach($sectores as $sector){
-                            $exisCliente= clientes::where('correo_id', '=', $userId )
-                                                ->where('sector_id','=',$sector->id)
-                                                ->first();
-                            if($exisCliente){
-                                $correos = new correos;
-                                $correos->cliente_id = $exisCliente->id;
-                                $correos->correo_id = $userId;
-                                $correos->correo = $correo;
-                                $correos->estado = 1;
-                                $correos->save();
-
-                            }else{
-                                
-                            }
-                        }
+                    }else{
+                        
                     }
-
-                    
 
 
 
@@ -358,16 +326,7 @@ class importarController extends Controller
 
         }
 
-        $output = array(
-            'estado'     =>  'correcto',
-            'mensaje'   => 'bien'
-        );
-    
-        echo json_encode($output);
-
     }
-
-
 
     public function importarTelefonos(Request $request)
     {
@@ -378,9 +337,13 @@ class importarController extends Controller
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
         $userId = Auth::id();
-        $empresa = empresas::where('correo_id','=',$userId)
-                                ->first();
-        
+
+        $sectorId = sectores::select('sectores.id as sectorId')
+                            ->join('sectoristas as scts','scts.id', '=','sectores.sectorista_id')
+                            ->join('users as u', 'u.id', '=', 'scts.correo_id')
+                            ->where('u.id', '=',$userId )
+                            ->where('sectores.estado', '=', 1 )
+                            ->first();
 
         for ($i=2; $i <= $numRows ; $i++) {
             
@@ -390,15 +353,19 @@ class importarController extends Controller
             $prefijo = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
             $numero = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
 
-            $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
-                
-            if(!$tiposDocumentosIdentidad){
+            if($tipoIdentificacion != "DNI" && $tipoIdentificacion != "RUC"){
                 break;
             }
-            $tipoTelefono = tiposTelefonos::where('nombre','=',$tipoTelefonoExcel)
-                                            ->first();
-            if(!$tipoTelefono){
+
+            if($tipoTelefonoExcel == "CASA"){
+                $tipoTelefono = 1;
+            }else if($tipoTelefonoExcel == "TRABAJO"){
+                $tipoTelefono = 2;
+            }else if($tipoTelefonoExcel == "PERSONAL"){
+                $tipoTelefono = 3;
+            }else if($tipoTelefonoExcel = "EMPRESA"){
+                $tipoTelefono = 4;
+            }else{
                 break;
             }
 
@@ -411,31 +378,26 @@ class importarController extends Controller
                                                 ->first();
                 if($exisUser){
                     $userId = $exisUser->id;
-                    $socios = socios::where('empresa_id','=',$empresa->id)
-                                    ->get();
-                    foreach($socios as $socio){
-                        $sectores = sectores::where('socio_id','=',$socio->id)
-                                                ->get();
-                        
-                        foreach($sectores as $sector){
-                            $exisCliente= clientes::where('correo_id', '=', $userId )
-                                                ->where('sector_id','=',$sector->id)
-                                                ->first();
-                            if($exisCliente){
-                                $telefonos = new telefonos;
-                                $telefonos->cliente_id = $exisCliente->id;
-                                $telefonos->correo_id = $userId;
-                                $telefonos->prefijo = $prefijo;
-                                $telefonos->numero = $numero;
-                                $telefonos->tipotelefono_id = $tipoTelefono->id;
-                                $telefonos->estado = 1;
-                                $telefonos->save();
+                    $exisCliente= clientes::where('correo_id', '=', $userId )
+                                            ->where('sector_id', '=', $sectorId->sectorId)
+                                            ->first();
+                    if($exisCliente){
 
-                            }else{
-                                
-                            }
-                        }
+                        
+                        $telefonos = new telefonos;
+                        $telefonos->cliente_id = $exisCliente->id;
+                        $telefonos->correo_id = $userId;
+                        $telefonos->prefijo = $prefijo;
+                        $telefonos->numero = $numero;
+                        $telefonos->tipo = $tipoTelefono;
+                        $telefonos->estado = 1;
+                        $telefonos->save();
+
+                    }else{
+                        
                     }
+
+
 
                 }else{
 
@@ -443,15 +405,10 @@ class importarController extends Controller
             }else{
 
             }
+
+
+
         }
-
-        $output = array(
-            'estado'     =>  'correcto',
-            'mensaje'   => 'bien'
-        );
-    
-        echo json_encode($output);
-
 
     }
 
@@ -465,8 +422,12 @@ class importarController extends Controller
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
         $userId = Auth::id();
 
-        $empresa = empresas::where('correo_id','=',$userId)
-                                ->first();
+        $sectorId = sectores::select('sectores.id as sectorId')
+                            ->join('sectoristas as scts','scts.id', '=','sectores.sectorista_id')
+                            ->join('users as u', 'u.id', '=', 'scts.correo_id')
+                            ->where('u.id', '=',$userId )
+                            ->where('sectores.estado', '=', 1 )
+                            ->first();
 
         for ($i=2; $i <= $numRows ; $i++) {
             
@@ -479,10 +440,7 @@ class importarController extends Controller
             $latitud = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
             $longitud = $objPHPExcel->getActiveSheet()->getCell('h'.$i)->getCalculatedValue();
 
-            $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
-                
-            if(!$tiposDocumentosIdentidad){
+            if($tipoIdentificacion != "DNI" && $tipoIdentificacion != "RUC"){
                 break;
             }
 
@@ -496,47 +454,41 @@ class importarController extends Controller
                                                 ->first();
                 if($exisUser){
                     $userId = $exisUser->id;
-                    $socios = socios::where('empresa_id','=',$empresa->id)
-                                    ->get();
-                    foreach($socios as $socio){
-                        $sectores = sectores::where('socio_id','=',$socio->id)
-                                                ->get();
+                    $exisCliente= clientes::where('correo_id', '=', $userId )
+                                            ->where('sector_id', '=', $sectorId->sectorId)
+                                            ->first();
+                    if($exisCliente){
+
                         
-                        foreach($sectores as $sector){
-                            $exisCliente= clientes::where('correo_id', '=', $userId )
-                                                ->where('sector_id','=',$sector->id)
-                                                ->first();
-                            if($exisCliente){
-                                $direcciones = new direcciones;
-                                $direcciones->cliente_id = $exisCliente->id;
-                                $direcciones->correo_id = $userId;
-                                $direcciones->calle = $direccion;
-                                $direcciones->ciudad = $ciudad;
-                                $direcciones->codigopostal = $codigoPostal;
-                                $direcciones->pais = $pais;
-                                $direcciones->latitud = $latitud;
-                                $direcciones->longitud = $longitud;
+                        $direcciones = new direcciones;
+                        $direcciones->cliente_id = $exisCliente->id;
+                        $direcciones->correo_id = $userId;
+                        $direcciones->calle = $direccion;
+                        $direcciones->ciudad = $ciudad;
+                        $direcciones->codigopostal = $codigoPostal;
+                        $direcciones->pais = $pais;
+                        $direcciones->latitud = $latitud;
+                        $direcciones->longitud = $longitud;
 
-                                $direcciones->estado = 1;
-                                $direcciones->save();
+                        $direcciones->estado = 1;
+                        $direcciones->save();
 
-                            }else{
-                                
-                            }
-                        }
+                    }else{
+                        
                     }
+
+
+
                 }else{
+
                 }
             }else{
-            }
-        }
 
-        $output = array(
-            'estado'     =>  'correcto',
-            'mensaje'   => 'bien'
-        );
-    
-        echo json_encode($output);
+            }
+
+
+
+        }
 
     }
 
@@ -550,8 +502,12 @@ class importarController extends Controller
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
         $userId = Auth::id();
 
-        $empresa = empresas::where('correo_id','=',$userId)
-                                ->first();
+        $sectorId = sectores::select('sectores.id as sectorId')
+                            ->join('sectoristas as scts','scts.id', '=','sectores.sectorista_id')
+                            ->join('users as u', 'u.id', '=', 'scts.correo_id')
+                            ->where('u.id', '=',$userId )
+                            ->where('sectores.estado', '=', 1 )
+                            ->first();
 
         for ($i=2; $i <= $numRows ; $i++) {
             
@@ -564,29 +520,11 @@ class importarController extends Controller
             $moneda = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
             $importe = $objPHPExcel->getActiveSheet()->getCell('h'.$i)->getCalculatedValue();
 
-            $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
-                
-            if(!$tiposDocumentosIdentidad){
+            if($tipoIdentificacion != "DNI" && $tipoIdentificacion != "RUC"){
                 break;
             }
 
-            $tiposMonedas = tiposMonedas::where('nombre','=',$moneda)
-                                        ->first();
-                
-            if(!$tiposMonedas){
-                break;
-            }
-
-            $tiposDocumentos = tiposDocumentos::where('nombre','=',$tipoDocumento)
-                                                ->first();
-                
-            if(!$tiposDocumentos){
-                break;
-            }
             
-
-
             $siPersona = personas::where('numeroidentificacion', '=', $numeroIdentificacion)
                                     ->first();
 
@@ -596,36 +534,29 @@ class importarController extends Controller
                                                 ->first();
                 if($exisUser){
                     $userId = $exisUser->id;
+                    $exisCliente= clientes::where('correo_id', '=', $userId )
+                                            ->where('sector_id', '=', $sectorId->sectorId)
+                                            ->first();
+                    if($exisCliente){
 
-                    $socios = socios::where('empresa_id','=',$empresa->id)
-                                    ->get();
-                    foreach($socios as $socio){
-                        $sectores = sectores::where('socio_id','=',$socio->id)
-                                                ->get();
                         
-                        foreach($sectores as $sector){
-                            $exisCliente= clientes::where('correo_id', '=', $userId )
-                                                ->where('sector_id','=',$sector->id)
-                                                ->first();
-                            if($exisCliente){
-                                $documento = new documentos;
-                                $documento->cliente_id = $exisCliente->id;
-                                $documento->tipoDocumento_id  = $tiposDocumentos->id;
-                                $documento->numero = $numeroDocumento;
-                                $documento->fechaemision = $fechaEmision;
-                                $documento->fechavencimiento = $fechaVencida;
-                                $documento->tipoMoneda_id = $tiposMonedas->id;
-                                $documento->importe = $importe;
-                                $documento->saldo = $importe;
-                                $documento->estado = 1;
-                                $documento->save();
+                        $documento = new documentos;
+                        $documento->cliente_id = $exisCliente->id;
+                        $documento->tipo = $tipoDocumento;
+                        $documento->numero = $numeroDocumento;
+                        $documento->fechaemision = $fechaEmision;
+                        $documento->fechavencimiento = $fechaVencida;
+                        $documento->moneda = $moneda;
+                        $documento->importe = $importe;
+                        $documento->saldo = $importe;
+                        $documento->estado = 1;
+                        $documento->save();
 
-                            }else{
-                                
-                            }
-                        }
+                    }else{
+                        echo "No existe este cliente";
                     }
-                    
+
+
 
                 }else{
                     echo "No existe este Usuario";
@@ -634,14 +565,9 @@ class importarController extends Controller
                 echo "No existe esta persona";
             }
 
-        }
 
-        $output = array(
-            'estado'     =>  'correcto',
-            'mensaje'   => 'bien'
-        );
-    
-        echo json_encode($output);
+
+        }
 
     }
 
@@ -654,83 +580,70 @@ class importarController extends Controller
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
         $userId = Auth::id();
-        $empresa = empresas::where('correo_id','=',$userId)
-                                ->first();
 
-           
+        $sectorId = sectores::select('sectores.id as sectorId')
+                            ->join('sectoristas as scts','scts.id', '=','sectores.sectorista_id')
+                            ->join('users as u', 'u.id', '=', 'scts.correo_id')
+                            ->where('u.id', '=',$userId )
+                            ->where('sectores.estado', '=', 1 )
+                            ->first();
 
         for ($i=2; $i <= $numRows ; $i++) {
             
             $tipoIdentificacion = $objPHPExcel->getActiveSheet()->getCell('a'.$i)->getCalculatedValue();
             $numeroIdentificacion = $objPHPExcel->getActiveSheet()->getCell('b'.$i)->getCalculatedValue();
-            $numeroDocumento = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
-            $tipoPago = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
-            $numeroPago = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
-            $fechaEmision = $objPHPExcel->getActiveSheet()->getCell('f'.$i)->getCalculatedValue();
-            $importe = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
+            $tipoDocumento = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
+            $numeroDocumento = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
+            $tipoPago = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
+            $numeroPago = $objPHPExcel->getActiveSheet()->getCell('f'.$i)->getCalculatedValue();
+            $fechaEmision = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
+            $importe = $objPHPExcel->getActiveSheet()->getCell('h'.$i)->getCalculatedValue();
 
-            $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
-                
-            if(!$tiposDocumentosIdentidad){
+            if($tipoIdentificacion != "DNI" && $tipoIdentificacion != "RUC"){
                 break;
             }
+
             
-            $tiposPagos = tiposPagos::where('nombre','=',$tipoPago)
-                                    ->first();
-                
-            if(!$tiposPagos){
-                break;
-            }
-
             $siPersona = personas::where('numeroidentificacion', '=', $numeroIdentificacion)
                                     ->first();
 
             if($siPersona){
                 $personaId = $siPersona->id;
                 $exisUser = User::where('persona_id', '=', $personaId )
-                                    ->first();
+                                                ->first();
                 if($exisUser){
                     $userId = $exisUser->id;
+                    $exisCliente= clientes::where('correo_id', '=', $userId )
+                                            ->where('sector_id', '=', $sectorId->sectorId)
+                                            ->first();
+                    if($exisCliente){
 
-                    $socios = socios::where('empresa_id','=',$empresa->id)
-                                    ->get();
-                    foreach($socios as $socio){
-                        $sectores = sectores::where('socio_id','=',$socio->id)
-                                                ->get();
-                        
-                        foreach($sectores as $sector){
-                            $exisCliente= clientes::where('correo_id', '=', $userId )
-                                                ->where('sector_id','=',$sector->id)
-                                                ->first();
-                                                
-                            
-
-                            if($exisCliente){
-                                $documentos = documentos::select('documentos.id as id', 'documentos.importe as importe', 'tm.nombre as monedaNombre')
-                                                    ->where('cliente_id','=',$exisCliente->id)
+                       $documentos = documentos::where('cliente_id', '=', $exisCliente->id)
                                                     ->where('numero','=',$numeroDocumento)
-                                                    ->join('tiposMonedas as tm', 'tm.id','=','documentos.tipoDocumento_id')
                                                     ->first();
-                                                    
-                                $saldo = $documentos->importe - $importe;
-                                $pago = new pagos;
-                                $pago->documento_id = $documentos->id;
-                                $pago->tipoPago_id = $tiposPagos->id;
-                                $pago->numero = $numeroPago;
-                                $pago->fechaemision = $fechaEmision;
-                                $pago->fechavencimiento = $fechaEmision;
-                                $pago->moneda = $documentos->monedaNombre;
-                                $pago->importe = $importe;
-                                $pago->saldo = $saldo;
-                                $pago->estado = 1;
-                                $pago->save();
+                        if($documentos){
+                            $saldo = $documentos->importe - $importe;
+                            $pago = new pagos;
+                            $pago->documento_id = $documentos->id;
+                            $pago->tipo = $tipoPago;
+                            $pago->numero = $numeroPago;
+                            $pago->fechaemision = $fechaEmision;
+                            $pago->fechavencimiento = $fechaEmision;
+                            $pago->moneda = $documentos->moneda;
+                            $pago->importe = $importe;
+                            $pago->saldo = $saldo;
+                            $pago->estado = 1;
+                            $pago->save();
 
-                            }else{
-                                
-                            }
+                        }else{
+                            echo "No existe el documento";
                         }
+
+                    }else{
+                        echo "No existe este cliente";
                     }
+
+
 
                 }else{
                     echo "No existe este Usuario";
@@ -742,13 +655,6 @@ class importarController extends Controller
 
 
         }
-
-        $output = array(
-            'estado'     =>  'correcto',
-            'mensaje'   => 'bien'
-        );
-    
-        echo json_encode($output);
 
     }
 

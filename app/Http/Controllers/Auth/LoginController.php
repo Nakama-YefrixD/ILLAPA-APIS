@@ -45,6 +45,52 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
+    public function login(Request $request)
+    {
+        $this->validate($request, [
+            'email'    => 'required',
+            'password' => 'required',
+        ]);
+
+        $username = $request->email;
+        $password = $request->password;
+        
+        $validacion = User::where('email', '=', $username)
+                            ->first();
+        $esEmpresa = empresas::where('correo_id','=',$validacion->id)
+                            ->first();
+        if($esEmpresa){
+
+            if(filter_var($username, FILTER_VALIDATE_EMAIL)) {
+                if (Auth::attempt(['email' => $username, 'password' => $password])) {
+                    return redirect()->intended($this->redirectPath());
+                }
+                return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'login' => 'These credentials do not match our records.',
+                ]);
+            } else {
+                if(Auth::attempt(['codigo' => $username, 'password' => $password])) {
+                    return redirect()->intended($this->redirectPath());
+                }
+                return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'login' => 'These credentials do not match our records.',
+                ]);
+            }
+        }else{
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'login' => 'These credentials do not match our records.',
+                ]);
+        }
+
+        
+    }
+
     public function loginApi(Request $request)
     {
         $username = $request->email;
