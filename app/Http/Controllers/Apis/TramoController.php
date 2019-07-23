@@ -18,11 +18,12 @@ class TramoController extends Controller
 
         $empresas = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                         "empresas.id as empresaId",
-                                        "p.tipoidentificacion as personaTipoIdentificacion", 
+                                        "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('empresas.estado', '=', 1)
                             ->get();
 
@@ -41,21 +42,23 @@ class TramoController extends Controller
 
         $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                             "empresas.id as empresaId",
-                                            "p.tipoidentificacion as personaTipoIdentificacion", 
+                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "p.imagen as personaImagen")
                                 ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('empresas.id', '=', $empresaid)
                                 ->first();
 
         $sociosEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId", 
-                                        "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion", 
+                                        "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion", 
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'socios.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.empresa_id', '=', $empresaid)
                             ->get();
 
@@ -75,12 +78,13 @@ class TramoController extends Controller
     {
 
         $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
-                                        "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion",
+                                        "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'socios.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.id', '=', $socioId)
                             ->first();
 

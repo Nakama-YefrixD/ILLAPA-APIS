@@ -24,6 +24,8 @@ use App\direcciones;
 use App\tiposMonedas;
 use App\tiposDocumentos;
 use App\tiposPagos;
+use App\tiposDocumentosIdentidad;
+
 
 use Peru\Jne\Dni;
 use Peru\Sunat\Ruc;
@@ -97,8 +99,7 @@ class DatoController extends Controller
         $dni = $request->dni;
         $idSocioSeleccionado = $request->idSocioSeleccionado;
         $tipoIdentificacion = $request->tipoIdentificacion;
-
-        
+        $nombre = $request->nombre;
 
         if($tipoIdentificacion == 1 ){
             $cs = new Dni();
@@ -139,7 +140,7 @@ class DatoController extends Controller
         if($siPersona){
             
             $personaId = $siPersona->id;
-            
+            $nombre = $siPersona->nombre;
             $sectoristas = sectoristas::where('socio_id', '=', $idSocioSeleccionado)
                                         ->get();
                                         
@@ -155,7 +156,13 @@ class DatoController extends Controller
                                             ->get();
                     foreach($correoCliente as $correoClientes ){
 
-                        $clientes = clientes::where('sector_id', '=', $sectoresSectorista->id)
+                        $clientes = clientes::select("clientes.id", 
+                                                        "clientes.sector_id",
+                                                        "tdi.nombre as tipoDocumentoIdentidad")
+                                            ->join('users as u', 'u.id', '=', 'clientes.correo_id')
+                                            ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                            ->where('sector_id', '=', $sectoresSectorista->id)
                                             ->where('correo_id', '=', $correoClientes->id)
                                             ->first();
 
@@ -168,7 +175,7 @@ class DatoController extends Controller
                                                         "sectorId"=>$clientes->sector_id,
                                                         "userId" => $correoClientes->id,
                                                         "image" => '$clientes->imagen',
-
+                                                        "tipoDocumentoIdentidad" => $clientes->tipoDocumentoIdentidad,
                                                             ));
                         }
                     }
@@ -291,29 +298,35 @@ class DatoController extends Controller
             $telefonoTipo = "telefonoTipo".$y;
             $telefonoPais = "telefonoPais".$y;
 
-            $telefonos = new telefonos;
-            $telefonos->cliente_id = $idCliente;
-            $telefonos->correo_id = $userId;
-            $telefonos->pais = $request->$telefonoPais;
-            $telefonos->prefijo = $request->$telefonoPrefijo;
-            $telefonos->numero = $request->$datorecibir;
-            $telefonos->tipotelefono_id = $request->$telefonoTipo;
-            $telefonos->estado = 1;
-            if($telefonos->save()){
-                
+            if($request->$datorecibir != null){
+                $telefonos = new telefonos;
+                $telefonos->cliente_id = $idCliente;
+                $telefonos->correo_id = $userId;
+                $telefonos->pais = $request->$telefonoPais;
+                $telefonos->prefijo = $request->$telefonoPrefijo;
+                $telefonos->numero = $request->$datorecibir;
+                $telefonos->tipotelefono_id = $request->$telefonoTipo;
+                $telefonos->estado = 1;
+                if($telefonos->save()){
+                    
+                }
             }
+            
+            
         }
         for($z = 0; $z < $contCorreos; $z++){
             $datorecibir = "correo".$z;
+            if($request->$datorecibir != null){
+                $correos = new correos;
+                $correos->cliente_id = $idCliente;
+                $correos->correo_id = $userId;
+                $correos->correo = $request->$datorecibir;
+                $correos->estado = 1;
+                if($correos->save()){
 
-            $correos = new correos;
-            $correos->cliente_id = $idCliente;
-            $correos->correo_id = $userId;
-            $correos->correo = $request->$datorecibir;
-            $correos->estado = 1;
-            if($correos->save()){
-
+                }
             }
+            
         }
        
         return json_encode(array("estado" => true, "idClienteNuevo"=>$idCliente ));
@@ -391,29 +404,35 @@ class DatoController extends Controller
 
     public function mostrarClientes($socioId)
     {
-
+        $tipos = tiposDocumentosIdentidad::select('id','nombre')
+                                            ->where('estado', '=', 1)
+                                            ->get();
+        $fechaActual = date('Y-m-d');
         $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
-                                        "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personatipoDocumentoIdentidad_id",
+                                        "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'socios.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.id', '=', $socioId)
                             ->first();
 
         // $sociosEmpresa = socios::where('empresa_id', '=', $empresaid)->get();
-        $clientesSocio = clientes::select('clientes.estado as clientesEstado', 's.id as socioId', 'clientes.id as clienteId',
-                                            "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personatipoDocumentoIdentidad_id",
+        $clientesSocio = clientes::select('clientes.estado as clientesEstado', 'clientes.id as clienteId',
+                                            "u.email as userEmail", "u.id as userId", 
+                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                            "tdi.nombre as tipoDocumentoIdentidad",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
-                                            "p.imagen as personaImagen",
-                                            'p.nombre as personaNombre')
+                                            'p.nombre as personaNombre', 
+                                            'clientes.imagen as personaImagen') 
                                             
                             ->join('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                             ->join('socios as s', 's.id', '=', 'sct.socio_id')
-
                             ->join('users as u', 'u.id', '=', 'clientes.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('s.id', '=', $socioId)
                             ->get();
 
@@ -423,9 +442,16 @@ class DatoController extends Controller
         // where c.sector_id = sct.id && sct.sectorista_id = scts.id && scts.socio_id = s.id && u.id = c.correo_id && u.persona_id = p.id ;
 
         if (sizeof($clientesSocio) > 0){
-            return json_encode(array("code" => true, "result"=>$clientesSocio, "socio"=>$socioEmpresa , "load"=>true ));
+            return json_encode(array("code" => true, 
+                                        "result"=>$clientesSocio, 
+                                        "socio"=>$socioEmpresa, 
+                                        "tipos" => $tipos,
+                                        "load"=>true ));
         }else{
-            return json_encode(array("code" => false,  "socio"=>$socioEmpresa, "load"=>true));
+            return json_encode(array("code" => false,  
+                                        "socio"=>$socioEmpresa, 
+                                        "tipos" => $tipos,
+                                        "load"=>true));
         }
 
     }
@@ -555,6 +581,7 @@ class DatoController extends Controller
             $direccionLatitud = "direccionLatitud".$x;
             $direccionLongitud = "direccionLongitud".$x;
 
+
             $direcciones = new direcciones;
             $direcciones->cliente_id = $idCliente;
             $direcciones->correo_id = $userId;
@@ -579,31 +606,36 @@ class DatoController extends Controller
             $telefonoTipo = "telefonoTipo".$y;
             $telefonoPais = "telefonoPais".$y;
 
-            $telefonos = new telefonos;
-            $telefonos->cliente_id = $idCliente;
-            $telefonos->pais = $request->$telefonoPais;
-            $telefonos->correo_id = $userId;
-            $telefonos->prefijo = $request->$telefonoPrefijo;
-            $telefonos->numero = $request->$datorecibir;
-            $telefonos->tipotelefono_id = $request->$telefonoTipo;
-            $telefonos->estado = 1;
-            if($telefonos->save()){
-                
+            if($request->$datorecibir != null){
+                $telefonos = new telefonos;
+                $telefonos->cliente_id = $idCliente;
+                $telefonos->pais = $request->$telefonoPais;
+                $telefonos->correo_id = $userId;
+                $telefonos->prefijo = $request->$telefonoPrefijo;
+                $telefonos->numero = $request->$datorecibir;
+                $telefonos->tipotelefono_id = $request->$telefonoTipo;
+                $telefonos->estado = 1;
+                if($telefonos->save()){
+                    
+                }
             }
+            
 
 
         }
         for($z = 0; $z < $contCorreos; $z++){
             $datorecibir = "correo".$z;
-
-            $correos = new correos;
-            $correos->cliente_id = $idCliente;
-            $correos->correo_id = $userId;
-            $correos->correo = $request->$datorecibir;
-            $correos->estado = 1;
-            if($correos->save()){
-                
+            if($request->$datorecibir != null){
+                $correos = new correos;
+                $correos->cliente_id = $idCliente;
+                $correos->correo_id = $userId;
+                $correos->correo = $request->$datorecibir;
+                $correos->estado = 1;
+                if($correos->save()){
+                    
+                }
             }
+            
 
 
         }

@@ -177,7 +177,9 @@ class datosFreeController extends Controller
                                             ->get();
                     foreach($correoCliente as $correoClientes ){
 
-                        $clientes = clientes::select("clientes.id", "clientes.sector_id","tdi.nombre as tipoDocumentoIdentidad" )
+                        $clientes = clientes::select("clientes.id", 
+                                                        "clientes.sector_id",
+                                                        "tdi.nombre as tipoDocumentoIdentidad")
                                             
                                             ->join('users as u', 'u.id', '=', 'clientes.correo_id')
                                             ->join('personas as p', 'p.id', '=', 'u.persona_id')

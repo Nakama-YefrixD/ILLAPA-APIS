@@ -124,6 +124,7 @@ class gestionFreeController extends Controller
                                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
                                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
                                                         ->where('clientes.id', '=', $clientesSectoristas->clienteId)
+                                                        ->where('d.fechavencimiento', '<', $fechaActual )
                                                         ->where('d.fechavencimiento', $signo, $fecha )
                                                         ->where('d.saldo', '>' , 0 )
                                                         ->groupBy('clientes.id')

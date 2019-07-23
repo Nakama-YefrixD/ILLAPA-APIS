@@ -26,9 +26,10 @@ class UsuarioController extends Controller
             $persona = User::select("users.email as userEmail", 
                                             "p.imagen as personaImagen", 
                                             "p.nombre as personaNombre", 
-                                            "p.tipoidentificacion as personaTipoIdentificacion",
+                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion")
                                 ->join('personas as p', 'p.id', '=', 'users.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('users.id', '=', $user->id)
                                 ->first();
 
@@ -229,9 +230,10 @@ class UsuarioController extends Controller
             $persona = User::select("users.email as userEmail", 
                                             "p.imagen as personaImagen", 
                                             "p.nombre as personaNombre", 
-                                            "p.tipoidentificacion as personaTipoIdentificacion",
+                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion")
                                 ->join('personas as p', 'p.id', '=', 'users.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('users.id', '=', $user->id)
                                 ->first();
 
@@ -268,11 +270,12 @@ class UsuarioController extends Controller
 
         $empresas = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                         "empresas.id as empresaId",
-                                        "p.tipoidentificacion as personaTipoIdentificacion", 
+                                        "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('empresas.estado', '=', 1)
                             ->get();
 
@@ -291,21 +294,23 @@ class UsuarioController extends Controller
 
         $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                             "empresas.id as empresaId",
-                                            "p.tipoidentificacion as personaTipoIdentificacion", 
+                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "p.imagen as personaImagen")
                                 ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('empresas.id', '=', $empresaid)
                                 ->first();
 
         $sociosEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId", 
-                                        "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion", 
+                                        "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'socios.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.empresa_id', '=', $empresaid)
                             ->get();
 
@@ -326,24 +331,26 @@ class UsuarioController extends Controller
     {
 
         $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
-                                        "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion",
+                                        "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'socios.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.id', '=', $socioId)
                             ->first();
 
 
         $sectoristasSocio = socios::select("socios.id as socioId",  'scts.id as sectoristasId',
-                                        "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion", 
+                                        "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('sectoristas as scts', 'scts.socio_id', '=', 'socios.id')
                             ->join('users as u', 'u.id', '=', 'scts.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.id', '=', $socioId)
                             ->get();
 
@@ -353,7 +360,7 @@ class UsuarioController extends Controller
 
 
         $gestoresSocio = socios::select("socios.id as socioId",  'g.id as gestorId',
-                                            "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion", 
+                                            "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "p.nombre as personaNombre", 
                                             "p.imagen as personaImagen")
@@ -363,7 +370,7 @@ class UsuarioController extends Controller
                                 ->join('gestores as g', 'g.sector_id', '=', 'sct.id')
                                 ->join('users as u', 'u.id', '=', 'g.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
-                                
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('socios.id', '=', $socioId)
                                 ->get();
 
@@ -439,7 +446,7 @@ class UsuarioController extends Controller
     public function mostrarSocioEmpresaSectores($socioId)
     {
         $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
-                                            "u.email as userEmail", "p.tipoidentificacion as personaTipoIdentificacion",
+                                            "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                             "p.imagen as personaImagen")
@@ -450,10 +457,11 @@ class UsuarioController extends Controller
 
         $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                             "empresas.id as empresaId",
-                                            "p.tipoidentificacion as personaTipoIdentificacion", 
+                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion")
                                 ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('empresas.id', '=', $socioEmpresa->empresaId)
                                 ->first();
         

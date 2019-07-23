@@ -139,7 +139,7 @@ Route::middleware('auth:api')->get('usuario/gestor/sector/{gestorid}/{socioid}',
 Route::middleware('auth:api')->post('usuario/gestor/eliminarSector', 'Apis\UsuarioController@eliminarSectorGestor');
 
 
-Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}', 'Apis\UsuarioController@mostrarSectorGestor');
+Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}/{socioid}', 'Apis\UsuarioController@mostrarSectorGestor');
 
 Route::middleware('auth:api')->get('usuario/datoSocioEmpresaSectores/{socioid}', 'Apis\UsuarioController@mostrarSocioEmpresaSectores');
 
