@@ -235,7 +235,6 @@ class datosFreeController extends Controller
                                 ->join('tiposTelefonos as tt', 'tt.id','=','telefonos.tipotelefono_id')                        
                                 ->get();
 
-
         $direcciones = direcciones::where('cliente_id', '=', $idCliente)->get();
         $correos = correos::where('cliente_id', '=', $idCliente)->get();
 

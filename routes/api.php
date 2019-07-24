@@ -106,6 +106,8 @@ Route::middleware('auth:api')->get('dato/clientesTodos/{socioid}', 'Apis\DatoCon
 Route::middleware('auth:api')->get('dato/clienteDocumentos/{clienteid}', 'Apis\DatoController@mostrarClienteDocumentos');
 Route::middleware('auth:api')->get('dato/clienteDocumentoPagos/{clienteid}', 'Apis\DatoController@mostrarClienteDocumentoPagos');
 
+Route::middleware('auth:api')
+        ->get('dato/clienteDatos/{clienteId}/{socioId}', 'Apis\DatoController@clienteDatos');
 
 Route::middleware('auth:api')->post('dato/eliminarDireccion', 'Apis\DatoController@eliminarDireccion');
 Route::middleware('auth:api')->post('dato/eliminarTelefono', 'Apis\DatoController@eliminarTelefonos');
@@ -136,10 +138,11 @@ Route::middleware('auth:api')->get('usuario/sociosTodos/{empresaid}', 'Apis\Usua
 Route::middleware('auth:api')->get('usuario/usuariosTodos/{socioid}', 'Apis\UsuarioController@mostrarUsuarios');
 
 Route::middleware('auth:api')->get('usuario/gestor/sector/{gestorid}/{socioid}', 'Apis\UsuarioController@mostrarSectorGestor');
+
 Route::middleware('auth:api')->post('usuario/gestor/eliminarSector', 'Apis\UsuarioController@eliminarSectorGestor');
+Route::middleware('auth:api')->post('usuario/sectorista/eliminarSector', 'Apis\UsuarioController@eliminarSectorSectorista');
 
-
-Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}/{socioid}', 'Apis\UsuarioController@mostrarSectorGestor');
+Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}/{socioid}', 'Apis\UsuarioController@mostrarSectoresSectorista');
 
 Route::middleware('auth:api')->get('usuario/datoSocioEmpresaSectores/{socioid}', 'Apis\UsuarioController@mostrarSocioEmpresaSectores');
 

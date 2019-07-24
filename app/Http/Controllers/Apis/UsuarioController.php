@@ -26,7 +26,7 @@ class UsuarioController extends Controller
             $persona = User::select("users.email as userEmail", 
                                             "p.imagen as personaImagen", 
                                             "p.nombre as personaNombre", 
-                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                            "tdi.nombre as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion")
                                 ->join('personas as p', 'p.id', '=', 'users.persona_id')
                                 ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
@@ -223,6 +223,7 @@ class UsuarioController extends Controller
         $idEmpresaSeleccionada = $request->idEmpresaSeleccionada;
 
         $user = User::where('email', '=', $email)
+                            ->where('estado','=',1)
                             ->first();
                             
         if($user){
@@ -230,7 +231,7 @@ class UsuarioController extends Controller
             $persona = User::select("users.email as userEmail", 
                                             "p.imagen as personaImagen", 
                                             "p.nombre as personaNombre", 
-                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                            "tdi.nombre as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion")
                                 ->join('personas as p', 'p.id', '=', 'users.persona_id')
                                 ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
@@ -270,7 +271,7 @@ class UsuarioController extends Controller
 
         $empresas = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                         "empresas.id as empresaId",
-                                        "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                        "tdi.nombre as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'empresas.correo_id')
@@ -278,8 +279,6 @@ class UsuarioController extends Controller
                             ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('empresas.estado', '=', 1)
                             ->get();
-
-
 
         if (sizeof($empresas) > 0){
             return json_encode(array("code" => true, "result"=>$empresas , "load"=>true));
@@ -291,10 +290,10 @@ class UsuarioController extends Controller
 
     public function mostrarSocios($empresaid)
     {
-
+        
         $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                             "empresas.id as empresaId",
-                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                            "tdi.nombre as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "p.imagen as personaImagen")
                                 ->join('users as u', 'u.id', '=', 'empresas.correo_id')
@@ -304,7 +303,8 @@ class UsuarioController extends Controller
                                 ->first();
 
         $sociosEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId", 
-                                        "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                        "u.email as userEmail", 
+                                        "tdi.nombre as personaTipoIdentificacion",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
@@ -400,7 +400,7 @@ class UsuarioController extends Controller
 
         $sectoresSocio = sectores::select("sectores.descripcion as sectoresDescripcion",
                                             "sectores.id as id",
-                                            "sectores.estGestor as estGestor")
+                                            "sectores.estGestor as estadoSectoristaGestor")
                             ->where('sectores.socio_id', '=', $socioid)
                             ->get();
 
@@ -412,11 +412,31 @@ class UsuarioController extends Controller
 
     }
 
-    public function eliminarSectorGestor(Request $request)
+    public function mostrarSectoresSectorista($sectoristaId, $socioid)
     {
 
-    
-        $idGestor = $request->idgestor;
+        $sectoristaSectores = sectores::select("descripcion as sectoresDescripcion", "id as sectorId")
+                                    ->where('estado', '=', 1)
+                                    ->where('sectorista_id', '=', $sectoristaId)
+                                    ->get();
+
+        $sectoresSocio = sectores::select("sectores.descripcion as sectoresDescripcion",
+                                            "sectores.id as id",
+                                            "sectores.estSectorista as estadoSectoristaGestor")
+                                    ->where('sectores.socio_id', '=', $socioid)
+                                    ->get();
+
+        if (sizeof($sectoristaSectores) > 0 ){
+            return json_encode(array("code" => true, "sectores"=>$sectoresSocio, "sectoresSeleccionados"=>$sectoristaSectores ,"load"=>true  ));
+        }else{
+            return json_encode(array("code" => false,  "load"=>true));
+        }
+
+    }
+
+    public function eliminarSectorGestor(Request $request)
+    {
+        $idGestor = $request->idUsuario;
         $idSectorAntiguo = $request->idsectorAntiguo;
         $idSectorNuevo = $request->idsectorNuevo;
         $idSocio= $request->idsocio;
@@ -437,6 +457,29 @@ class UsuarioController extends Controller
         }else{
             return json_encode(array("code" => false, "load"=>true));
         }
+    }
+
+    public function eliminarSectorSectorista(Request $request)
+    {
+        $idSectorista = $request->idUsuario;
+        $idSectorAntiguo = $request->idsectorAntiguo;
+        $idSectorNuevo = $request->idsectorNuevo;
+        $idSocio= $request->idsocio;
+        
+        $sectorAntiguo = sectores::find($idSectorAntiguo);
+        $sectorAntiguo->sectorista_id = null;
+        $sectorAntiguo->estSectorista = 0;
+        $sectorAntiguo->update();
+
+        $sectorNuevo = sectores::find($idSectorNuevo);
+        $sectorNuevo->sectorista_id = $idSectorista;
+        $sectorNuevo->estSectorista = 1;
+
+        if( $sectorNuevo->update()){
+            return json_encode(array("code" => true,  "load"=>true));
+        }else{
+            return json_encode(array("code" => false, "load"=>true));
+        }
 
 
     }
@@ -446,19 +489,21 @@ class UsuarioController extends Controller
     public function mostrarSocioEmpresaSectores($socioId)
     {
         $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
-                                            "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
+                                            "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion", 
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                             "p.imagen as personaImagen")
                                 ->join('users as u', 'u.id', '=', 'socios.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                                 ->where('socios.id', '=', $socioId)
                                 ->first();
 
         $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
                                             "empresas.id as empresaId",
-                                            "p.tipoDocumentoIdentidad_id as personaTipoIdentificacion",
-                                            "p.numeroidentificacion as personaNumeroIdentificacion")
+                                            "tdi.nombre as personaTipoIdentificacion", 
+                                            "p.numeroidentificacion as personaNumeroIdentificacion",
+                                            "p.imagen as personaImagen")
                                 ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
                                 ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')

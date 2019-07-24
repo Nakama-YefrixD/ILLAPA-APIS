@@ -233,7 +233,7 @@ class GestionController extends Controller
         $clientesSocio = clientes::select('sct.id as sectorId' ,'clientes.estado as clientesEstado', 
                                             'clientes.id as clienteId',
                                             's.id as socioId', 'p.nombre as personaNombre', 
-                                            "p.imagen as personaImagen", DB::raw('count(d.id) as countDocumentos'))
+                                            "clientes.imagen as personaImagen", DB::raw('count(d.id) as countDocumentos'))
 
                             ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
                             ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
@@ -447,7 +447,7 @@ class GestionController extends Controller
             
         }else if(sizeof($telefonosCliente) > 0 &&  sizeof($acciones) > 0){
             // return json_encode(array("code" => false, "codeDireccionesTelefonos" => true, "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));
-            return json_encode(array("code" => false,  "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));
+            return json_encode(array("code" => false,  "codeTelefonosAcciones" => true, "telefonos"=>$telefonosCliente,"acciones" =>$acciones ,"load"=>true ));
         }else if(sizeof($direcciones) > 0 && sizeof($acciones) > 0){
             return json_encode(array("code" => false, "codeDireccionesAcciones" => true, "direcciones"=>$direcciones,"acciones" =>$acciones ,"load"=>true ));
         }else if(sizeof($direcciones) > 0 && sizeof($telefonosCliente) > 0){

@@ -26,6 +26,7 @@ use App\tiposDocumentos;
 use App\tiposPagos;
 use App\tiposDocumentosIdentidad;
 
+use App\tiposTelefonos;
 
 use Peru\Jne\Dni;
 use Peru\Sunat\Ruc;
@@ -62,22 +63,24 @@ class DatoController extends Controller
     {
 
         $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
-                                        "p.tipoDocumentoIdentidad_id as personatipoDocumentoIdentidad_id", 
+                                        "tdi.nombre as tipoDocumentoIdentidad",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'empresas.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('empresas.id', '=', $empresaid)
                             ->first();
 
         // $sociosEmpresa = socios::where('empresa_id', '=', $empresaid)->get();
         $sociosEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId", 
-                                        "u.email as userEmail", "p.tipoDocumentoIdentidad_id as personatipoDocumentoIdentidad_id", 
+                                        "u.email as userEmail", "tdi.nombre as tipoDocumentoIdentidad",
                                         "p.numeroidentificacion as personaNumeroIdentificacion",
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen")
                             ->join('users as u', 'u.id', '=', 'socios.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('socios.empresa_id', '=', $empresaid)
                             ->get();
 
@@ -191,7 +194,78 @@ class DatoController extends Controller
         $sectores = sectores::where('socio_id', '=', $socioId)
                             ->get();
 
-        return json_encode(array("code" => true, "sectores"=>$sectores, "load"=>true ));
+        $tiposTelefonos = tiposTelefonos::select('id','nombre')
+                                        ->where('estado','=',1)
+                                        ->get();
+
+        return json_encode(array("code" => true, 
+                                    "sectores"=>$sectores, 
+                                    "tiposTelefonos"=>$tiposTelefonos,
+                                    "load"=>true ));
+    }
+
+    public function clienteDatos($idCliente, $idSocio)
+    {
+        $telefonos = telefonos::select("telefonos.prefijo", "telefonos.numero", "tt.nombre as tipo", "telefonos.id as id")
+                                ->where('cliente_id', '=', $idCliente)
+                                ->join('tiposTelefonos as tt', 'tt.id','=','telefonos.tipotelefono_id')
+                                ->get();
+
+        $direcciones = direcciones::where('cliente_id', '=', $idCliente)->get();
+        $correos = correos::where('cliente_id', '=', $idCliente)->get();
+
+        $tiposTelefonos = tiposTelefonos::select('id','nombre')
+                                        ->where('estado','=',1)
+                                        ->get();
+        $sector = clientes::select('sct.id','sct.descripcion')
+                            ->join('sectores as sct', 'sct.id','=','clientes.sector_id')
+                            ->where('sct.socio_id','=',$idSocio)
+                            ->where('clientes.id','=',$idCliente)
+                            ->first();
+
+        $sectores = sectores::where('socio_id', '=', $idSocio)
+                            ->get();
+
+
+        if(sizeof($telefonos) > 0){
+            $codeTelefonos = true;
+        }else{
+            $codeTelefonos = false;
+        }
+        
+        if(sizeof($direcciones) > 0){
+            $codeDirecciones = true;
+        }else{
+            $codeDirecciones = false;
+        }
+
+        if(sizeof($correos) > 0){
+            $codeCorreos = true;
+        }else{
+            $codeCorreos = false;
+        }
+
+        if(sizeof($sectores) > 0){
+            $codeSectores = true;
+        }else{
+            $codeSectores = false;
+        }
+
+        return json_encode(array(
+            "load"=>true,
+            "codeTelefonos"=>$codeTelefonos,
+            "telefonos" => $telefonos,
+            "codeDirecciones"=>$codeDirecciones,
+            "direcciones"=>$direcciones,
+            "codeCorreos"=>$codeCorreos,
+            "correos"=>$correos,
+            "codeSectores"=>$codeSectores,
+            "sectores"=>$sectores,
+            "sector"=>$sector,
+            "tiposTelefonos"=>$tiposTelefonos
+
+        ));
+
     }
 
     public function agregarNuevoCliente(Request $request)
@@ -201,9 +275,7 @@ class DatoController extends Controller
         $nombre = $request->nombre;
         $idSector = $request->idSector;
 
-        
-
-
+        $ubicacion = 'imagenes_clientes/clientes.png';
         $siPersona = personas::where('numeroidentificacion', '=', $dni)
                                 ->first();
         if($siPersona){
@@ -232,7 +304,7 @@ class DatoController extends Controller
             $personas->tipoDocumentoIdentidad_id = $tipoIdentidad;
             $personas->numeroidentificacion = $dni;
             $personas->nombre = $nombre;
-            $personas->imagen = 'https://cdn.pixabay.com/photo/2016/06/03/15/35/customer-service-1433640_960_720.png';
+            $personas->imagen = 'https://cdn.pixabay.com/photo/2015/03/04/22/35/head-659651_960_720.png';
             $personas->estado = 1;
             $personas->save();
 
@@ -250,7 +322,7 @@ class DatoController extends Controller
             $userId = $userCliente->id;
 
         }
-        $ubicacion = 'imagenes_clientes/clientes.png';
+        
         
 
         $cliente = new clientes;
@@ -570,7 +642,13 @@ class DatoController extends Controller
         $contDirecciones = $request->contDirecciones;
         $contTelefonos = $request->contTelefonos;
         $contCorreos = $request->contCorreos;
+        $sectorId = $request->sectorId;
 
+
+        $cliente = clientes::find($idCliente);
+        $cliente->sector_id = $sectorId;
+        $cliente->update();
+        
         // $idSocio = $request->idSocio; ID DEL SOCIO !! DEL CLIENTE
         
         for($x = 0; $x < $contDirecciones; $x++){

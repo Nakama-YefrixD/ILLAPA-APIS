@@ -35,12 +35,14 @@ class gestionFreeController extends Controller
                                                 ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                 ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                 ->where('sct.id', '=', $sectoristarDatos->sectorId)
+                                                ->where('documentos.saldo','>',0)
                                                 ->count();
 
         $sumaImportesDocumentosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
                                                         ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                         ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                         ->where('sct.id', '=', $sectoristarDatos->sectorId)
+                                                        ->where('documentos.saldo','>',0)
                                                         ->sum("documentos.importe");
         
         $numeroDocumentosVencidosSectoristaFree = documentos::select("documentos.id")
@@ -48,6 +50,7 @@ class gestionFreeController extends Controller
                                                             ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                             ->where('sct.id', '=', $sectoristarDatos->sectorId)
                                                             ->where('documentos.fechavencimiento', '<', $fechaActual)
+                                                            ->where('documentos.saldo','>',0)
                                                             ->count();
 
         $sumaImportesDocumentosVencidosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
@@ -55,7 +58,7 @@ class gestionFreeController extends Controller
                                                                     ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                                     ->where('sct.id', '=', $sectoristarDatos->sectorId)
                                                                     ->where('documentos.fechavencimiento', '<', $fechaActual)
-                                                                    
+                                                                    ->where('documentos.saldo','>',0)
                                                                     ->sum("documentos.importe");
 
 
@@ -69,7 +72,7 @@ class gestionFreeController extends Controller
                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
                                         ->where('scts.id', '=', $sectoristaId)
-                                        
+                                        ->where('d.saldo','>',0)
                                         ->groupBy('clientes.id')
                                         ->get();
 
