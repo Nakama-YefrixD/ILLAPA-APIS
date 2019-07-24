@@ -32,11 +32,11 @@ class gestionFreeController extends Controller
                             ->first();
 
         $numeroDocumentosSectoristaFree = documentos::select("documentos.id")
-                                                ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
-                                                ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                ->where('sct.id', '=', $sectoristarDatos->sectorId)
-                                                ->where('documentos.saldo','>',0)
-                                                ->count();
+                                                    ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                    ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                    ->where('sct.id', '=', $sectoristarDatos->sectorId)
+                                                    ->where('documentos.saldo','>',0)
+                                                    ->count();
 
         $sumaImportesDocumentosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
                                                         ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
