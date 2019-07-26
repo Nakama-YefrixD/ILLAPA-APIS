@@ -41,6 +41,9 @@ Route::middleware('auth:api')->get('/datosCliente/{clienteid}', 'Apis\GestionCon
 
 Route::middleware('auth:api')->post('/agregarAccion', 'Apis\GestionController@agregarAccion');
 
+// MOSTRAR CLIENTES GESTOR DE EMPRESAS
+Route::middleware('auth:api')->get('gestion/clientesTodos/{gestorId}', 'Apis\Gestores\gestorEmpresasController@mostrarClientes');
+Route::middleware('auth:api')->get('gestion/documentosTodos/{gestorId}', 'Apis\Gestores\gestorEmpresasController@todosDocumentos');
 
 
 // GESTION FREE
@@ -55,16 +58,16 @@ Route::middleware('auth:api')
 
 // VENCIMIENTOS
 Route::middleware('auth:api')->get('vencimiento/empresa/fechas/{id}', 'Apis\VencimientosController@mostrarFechasEmpresa');
-Route::middleware('auth:api')->get('vencimiento/socio/fechas/{id}', 'Apis\VencimientosController@mostrarFechasEmpresa');
-Route::middleware('auth:api')->get('vencimiento/sectorista/fechas/{id}', 'Apis\VencimientosController@');
-Route::middleware('auth:api')->get('vencimiento/gestor/fechas/{id}', 'Apis\VencimientosController@');
+Route::middleware('auth:api')->get('vencimiento/socio/fechas/{id}', 'Apis\VencimientosController@mostrarFechasSocio');
+Route::middleware('auth:api')->get('vencimiento/sectorista/fechas/{id}', 'Apis\VencimientosController@mostrarFechasSectorista');
+Route::middleware('auth:api')->get('vencimiento/gestor/fechas/{id}', 'Apis\VencimientosController@mostrarFechasGestor');
 Route::middleware('auth:api')->get('vencimiento/free/fechas/{id}', 'Apis\Vencimientos\vencmientosFreeController@mostrarFechasSectoristasFree');
 Route::middleware('auth:api')->get('vencimiento/admin/fechas/{id}', 'Apis\VencimientosController@');
 
 Route::middleware('auth:api')
         ->get('vencimiento/empresa/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosEmpresa');
 Route::middleware('auth:api')
-        ->get('vencimiento/socio/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosEmpresa');
+        ->get('vencimiento/socio/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosSocio');
 Route::middleware('auth:api')
         ->get('vencimiento/sectorista/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosEmpresa');
 Route::middleware('auth:api')

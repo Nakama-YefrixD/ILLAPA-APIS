@@ -156,9 +156,13 @@ class GestionController extends Controller
                                     ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
                                     ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
                                     ->where('empresas.id', '=', $empresaid)
-                                    ->where('d.saldo','>',0)
+                                    // ->where('d.saldo','>',0)
                                     ->groupBy('empresas.id')
                                     ->first();
+        if($empresa['sumaImportesDocumentos'] == null){
+            $empresa['sumaImportesDocumentos'] = sprintf("%.2f", 0);
+        }                                    
+        
 
         $empresaVencida = empresas::select( "empresas.id",
                                             DB::raw('count(d.id) as numeroDocumentosVencidos'),
@@ -172,7 +176,7 @@ class GestionController extends Controller
                                     ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
                                     ->where('empresas.id', '=', $empresaid)
                                     ->where('d.fechavencimiento', '<', $fechaActual)
-                                    ->where('d.saldo','>',0)
+                                    // ->where('d.saldo','>',0)
                                     ->groupBy('empresas.id')
                                     ->first();
         if($empresaVencida == null){
@@ -194,9 +198,11 @@ class GestionController extends Controller
                             ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
                             ->where('socios.estado', '=', 1)
                             ->where('socios.empresa_id', '=', $empresaid)
-                            ->where('d.saldo','>',0)
+                            // ->where('d.saldo','>',0)
                             ->groupBy('socios.id')
                             ->get();
+
+        
 
             if(sizeof($socios) > 0){
                 $listSociosEmpresa = array(
@@ -223,6 +229,10 @@ class GestionController extends Controller
                 $listSociosEmpresa[$cont]['personaNombre'] = $socio->personaNombre;
                 $listSociosEmpresa[$cont]['personaImagen'] = $socio->personaImagen;
                 $listSociosEmpresa[$cont]['numeroDocumentos'] = $socio->numeroDocumentos;
+
+                if($socio->sumaImportesDocumentos == null){
+                    $socio->sumaImportesDocumentos = sprintf("%.2f", 0);
+                }
                 $listSociosEmpresa[$cont]['sumaImportesDocumentos'] = $socio->sumaImportesDocumentos;
                 
                 $documentosVencidos = socios::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
@@ -235,7 +245,7 @@ class GestionController extends Controller
                                                             ->where('socios.empresa_id', '=', $empresaid)
                                                             ->where('d.fechavencimiento', '<', $fechaActual)
                                                             ->where('socios.estado', '=', 1)
-                                                            ->where('d.saldo','>',0)
+                                                            // ->where('d.saldo','>',0)
                                                             ->groupBy('socios.id')
                                                             ->first();
 
@@ -276,6 +286,9 @@ class GestionController extends Controller
     {
 
         $fechaActual = date('Y-m-d');
+
+
+    
         $socio = socios::select("socios.id as socioId", "socios.empresa_id as empresaId", 
                                         "socios.estado as socioEstado", "p.nombre as personaNombre", 
                                         "p.imagen as personaImagen", 
@@ -292,6 +305,31 @@ class GestionController extends Controller
                                     ->groupBy('socios.id')
                                     ->first();
 
+
+        if($socio == null){
+            
+            $socio = socios::select("socios.id as socioId", 
+                                            "socios.empresa_id as empresaId", 
+                                            "socios.estado as socioEstado", 
+                                            "p.nombre as personaNombre", 
+                                            "p.imagen as personaImagen")
+                                    ->leftJoin('users as u', 'u.id', '=', 'socios.correo_id')
+                                    ->leftJoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                    ->leftJoin('sectores as sct', 'sct.socio_id', '=', 'socios.id')
+                                    ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
+                                    ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
+                                    ->where('socios.id', '=', $socioId)
+                                    ->groupBy('socios.id')
+                                    ->first();
+
+            if($socio['numeroDocumentos'] == null){
+                $socio['numeroDocumentos'] = 0;
+            }
+
+            if($socio['sumaImportesDocumentos'] == null){
+                $socio['sumaImportesDocumentos'] = sprintf("%.2f", 0);
+            }
+        } 
         $socioVencido = socios::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
                                             DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos"))
                                             
@@ -430,7 +468,7 @@ class GestionController extends Controller
                                         "load"=>true));
         }else{
             return json_encode(array("code" => false, 
-                                    "socio"=>$socioEmpresa,
+                                    "socio"=>$socio,
                                     "socioVencido"=>$socioVencido,
                                     "load"=>true));
         }

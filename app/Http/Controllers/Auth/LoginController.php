@@ -120,6 +120,7 @@ class LoginController extends Controller
 
 
                 $siEmpresa = empresas::where('correo_id', '=', $user->id)
+                            ->where('estado','=','1')
                             ->first();
 
                 if ($siEmpresa){
@@ -137,11 +138,13 @@ class LoginController extends Controller
                 }
 
                 $siSocio = socios::where('correo_id', '=', $user->id)
+                        ->where('estado','=','1')
                         ->first();
                 if ($siSocio){
                     return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>2, "id" =>$siSocio->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
                 }
                 $siSectorista = sectoristas::where('correo_id', '=', $user->id)
+                        ->where('estado','=','1')
                         ->first();
                         
                 if ($siSectorista){
@@ -149,7 +152,8 @@ class LoginController extends Controller
                 }
 
                 $siGestor = gestores::where('correo_id', '=', $user->id)
-                        ->first();
+                                        ->where('estado','=','1')
+                                        ->first();
                 if ($siGestor){
                                 
                     return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>4, "id" =>$siGestor->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));

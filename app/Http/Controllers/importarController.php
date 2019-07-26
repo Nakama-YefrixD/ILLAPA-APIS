@@ -387,8 +387,9 @@ class importarController extends Controller
             $tipoIdentificacion = $objPHPExcel->getActiveSheet()->getCell('a'.$i)->getCalculatedValue();
             $numeroIdentificacion = $objPHPExcel->getActiveSheet()->getCell('b'.$i)->getCalculatedValue();
             $tipoTelefonoExcel = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
-            $prefijo = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
-            $numero = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
+            $pais = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
+            $prefijo = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
+            $numero = $objPHPExcel->getActiveSheet()->getCell('f'.$i)->getCalculatedValue();
 
             $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
                                                                     ->first();
@@ -425,6 +426,7 @@ class importarController extends Controller
                                 $telefonos = new telefonos;
                                 $telefonos->cliente_id = $exisCliente->id;
                                 $telefonos->correo_id = $userId;
+                                $telefonos->pais = $pais;
                                 $telefonos->prefijo = $prefijo;
                                 $telefonos->numero = $numero;
                                 $telefonos->tipotelefono_id = $tipoTelefono->id;

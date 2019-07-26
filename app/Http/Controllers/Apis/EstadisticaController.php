@@ -17,19 +17,134 @@ class EstadisticaController extends Controller
     {
 
         
+        // select
+        //         empresas.id,
+        //         empresas.nombre,
+        //         count(documentos.id) as c_documentos
+        //     from empresas
+        //     left join socios on socios.empresa_id = empresas.id
+        //     left join sectores on sectores.socio_id = socios.id
+        //     left join clientes on clientes.sector_id = sectores.id
+        //     left join documentos on documentos.cliente_id = clientes.id
+        //     group by empresas.id;
+        $fechaActual = date('Y-m-d');
+        $numeroDocumentosEmpresas = documentos::select("documentos.id")
+                                                    ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                    ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                    ->where('documentos.saldo','>',0)
+                                                    ->count();
+        $sumaImportesDocumentosEmpresas = documentos::select("documentos.id")
+                                                    ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                    ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                    ->where('documentos.saldo','>',0)
+                                                    ->sum("documentos.importe");
+        $numeroDocumentosVencidosEmpresas = documentos::select("documentos.id")
+                                                        ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                        ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                        ->where('documentos.fechavencimiento', '<', $fechaActual)
+                                                        ->where('documentos.saldo','>',0)
+                                                        ->count();
+        $sumaImportesDocumentosVencidosEmpresas = documentos::select("documentos.id")
+                                                            ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                            ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                            ->where('documentos.fechavencimiento', '<', $fechaActual)
+                                                            ->where('documentos.saldo','>',0)
+                                                            ->sum("documentos.importe");
+
         $empresas = empresas::select("empresas.nombre as empresaNombre",
                                         "empresas.id as empresaId",
-                                        "p.imagen as personaImagen")
-                            ->join('users as u', 'u.id', '=', 'empresas.correo_id')
-                            ->join('personas as p', 'p.id', '=', 'u.persona_id')
-                            ->where('empresas.estado', '=', 1)
-                            ->get();
+                                        "p.imagen as personaImagen",
+                                        "p.numeroidentificacion as personaNumeroIdentificacion",
+                                        "tdi.nombre as tipoDocumentoIdentidad",
+                                        "u.email as userEmail",
+                                        DB::raw('count(d.id) as countDocumentos'),
+                                        DB::raw("SUM(d.importe) as sumaImportesDocumentos"))
+                                        
+                                    ->leftJoin('users as u', 'u.id', '=', 'empresas.correo_id')
+                                    ->leftJoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                    ->leftJoin('socios as s', 's.empresa_id', '=', 'empresas.id')
+                                    ->leftJoin('sectores as sct', 'sct.socio_id', '=', 's.id')
+                                    ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
+                                    ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
+                                    ->leftjoin('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                    ->where('empresas.estado', '=', 1)
+                                    // ->where('d.saldo','>',0)
+                                    ->groupBy('empresas.id')
+                                    ->get();
 
 
+        if(sizeof($empresas) > 0){
+            $listaEmpresas = array(
+                array(
+                    'empresaId' => 0,
+                    'empresaNombre' => 0,
+                    'personaImagen' => 0,
+                    'tipoDocumentoIdentidad' => 0,
+                    'numeroDocumentoIdentidad' => 0,
+                    'userEmail' => 0,
+                    'numeroDocumentos' => 0,
+                    'sumaImportesDocumentos' => 0,
+                    'numeroDocumentosVencidos' => 0,
+                    'sumaImportesDocumentosVencidos' => 0,
+                ),
+            );
+
+            $cont = 0;
+            foreach($empresas as $empresa){
+
+                $listaEmpresas[$cont]['empresaId'] = $empresa->empresaId;
+                $listaEmpresas[$cont]['empresaNombre'] = $empresa->empresaNombre;
+                $listaEmpresas[$cont]['personaImagen'] = $empresa->personaImagen;
+                $listaEmpresas[$cont]['tipoDocumentoIdentidad'] = $empresa->tipoDocumentoIdentidad;
+                $listaEmpresas[$cont]['numeroDocumentoIdentidad'] = $empresa->personaNumeroIdentificacion;
+                $listaEmpresas[$cont]['userEmail'] = $empresa->userEmail;
+                $listaEmpresas[$cont]['numeroDocumentos'] = $empresa->countDocumentos;
+                $listaEmpresas[$cont]['sumaImportesDocumentos'] = sprintf("%.2f", $empresa->sumaImportesDocumentos); 
+
+
+                $empresasDocumentosVencidas = empresas::select( DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                                                                DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos") )
+                                                        ->leftJoin('users as u', 'u.id', '=', 'empresas.correo_id')
+                                                        ->leftJoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                                        ->leftJoin('socios as s', 's.empresa_id', '=', 'empresas.id')
+                                                        ->leftJoin('sectores as sct', 'sct.socio_id', '=', 's.id')
+                                                        ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
+                                                        ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
+                                                        ->where('empresas.id', '=', $empresa->empresaId)
+                                                        ->where('d.fechavencimiento', '<', $fechaActual)
+                                                        ->groupBy('empresas.id')
+                                                        ->first();
+                $numeroDocumentosVencidos = 0;
+                if($empresasDocumentosVencidas['numeroDocumentosVencidos'] != null){
+                    $numeroDocumentosVencidos = $empresasDocumentosVencidas['numeroDocumentosVencidos'];
+                }
+                $listaEmpresas[$cont]['numeroDocumentosVencidos'] = $numeroDocumentosVencidos;
+
+                $sumaImportesDocumentosVencidos = 0;
+                if($empresasDocumentosVencidas['sumaImportesDocumentosVencidos'] != null){
+                    $sumaImportesDocumentosVencidos = $empresasDocumentosVencidas['sumaImportesDocumentosVencidos'];
+                }
+                $listaEmpresas[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f", $sumaImportesDocumentosVencidos);
+                $cont = $cont+1;
+            }
+        }
+        // $documentos = documentos::where('fechavencimiento', '>', $fechaActual)->count();
+                        
         if (sizeof($empresas) > 0){
-            return json_encode(array("code" => 1, "result"=>$empresas, "load"=>true));
+            return json_encode(array("code" => true, 
+                                    "result"=>$listaEmpresas, 
+                                    "numeroDocumentos" => $numeroDocumentosEmpresas,
+                                    "sumaImportesDocumentos"=>  sprintf("%.2f", $sumaImportesDocumentosEmpresas),
+                                    "numeroDocumentosVencidos" => $numeroDocumentosVencidosEmpresas,
+                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosEmpresas),
+                                    "load"=> true ));
         }else{
-            return json_encode(array("code" => 0, "message"=>"No hay empresas !", "load"=>true));
+            return json_encode(array("code" => false,  
+                                    "numeroDocumentos"=> $numeroDocumentosEmpresas,
+                                    "sumaImportesDocumentos"=> sprintf("%.2f", $sumaImportesDocumentosEmpresas),  
+                                    "numeroDocumentosVencidos"=> $numeroDocumentosVencidosEmpresas,
+                                    "sumaImportesDocumentosVencidos" => sprintf("%.2f", $sumaImportesDocumentosVencidosEmpresas), 
+                                    "load"=>true ));
         }
 
     }
@@ -90,7 +205,7 @@ class EstadisticaController extends Controller
                                             'clientes.id as clienteId',
                                             "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion",
                                             "p.numeroidentificacion as personaNumeroIdentificacion",
-                                            "p.imagen as personaImagen",
+                                            "clientes.imagen as personaImagen",
                                             'p.nombre as personaNombre')
                             ->join('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                             ->join('socios as s', 's.id', '=', 'sct.socio_id')
