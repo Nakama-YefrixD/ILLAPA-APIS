@@ -88,7 +88,7 @@ class importarController extends Controller
 
     public function ejemplosimportardescargar($nombreExcel)
     {
-        $file= public_path(). "\ExamplesImportacion\D".$nombreExcel.".xlsx";
+        $file= "ExamplesImportacion\D".$nombreExcel.".xlsx";
         $headers = array(
             'Content-Type: application/xlsx',
             );
