@@ -56,9 +56,11 @@ class LoginController extends Controller
         $password = $request->password;
         
         $validacion = User::where('email', '=', $username)
+                            ->where('estado','=',1) 
                             ->first();
         $esEmpresa = empresas::where('correo_id','=',$validacion->id)
-                            ->first();
+                                ->where('estado','=',1)
+                                ->first();
         if($esEmpresa){
 
             if(filter_var($username, FILTER_VALIDATE_EMAIL)) {
