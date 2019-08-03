@@ -44,6 +44,9 @@ Route::middleware('auth:api')->post('/agregarAccion', 'Apis\GestionController@ag
 // MOSTRAR CLIENTES GESTOR DE EMPRESAS
 Route::middleware('auth:api')->get('gestion/clientesTodos/{gestorId}', 'Apis\Gestores\gestorEmpresasController@mostrarClientes');
 Route::middleware('auth:api')->get('gestion/documentosTodos/{gestorId}', 'Apis\Gestores\gestorEmpresasController@todosDocumentos');
+Route::middleware('auth:api')
+        ->get('gestion/clientesTodosExcepcion/{gestorId}', 'Apis\Gestores\gestorEmpresasController@mostrarClientesTODO');
+
 
 
 // GESTION FREE
@@ -71,7 +74,7 @@ Route::middleware('auth:api')
 Route::middleware('auth:api')
         ->get('vencimiento/sectorista/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosEmpresa');
 Route::middleware('auth:api')
-        ->get('vencimiento/gestor/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosEmpresa');
+        ->get('vencimiento/gestor/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosGestor');
 Route::middleware('auth:api')
         ->get('vencimiento/free/fechasEspecifica/{id}', 'Apis\Vencimientos\vencmientosFreeController@documentosSectoristasFree');
 Route::middleware('auth:api')
@@ -85,11 +88,15 @@ Route::middleware('auth:api')->get('estadistica/sociosTodos/{empresaid}', 'Apis\
 Route::middleware('auth:api')->get('estadistica/clientesTodos/{socioid}', 'Apis\EstadisticaController@mostrarClientes');
 Route::middleware('auth:api')->get('estadistica/cliente/{clienteid}', 'Apis\EstadisticaController@mostrarCliente');
 
-// ESTADISTICAS FREE
 
+// ESTADISTICAS DE UN GESTOR
+Route::middleware('auth:api')
+        ->get('estadistica/gestor/clientesTodos/{gestorId}', 'Apis\Estadisticas\gestorEmpresasController@mostrarClientes');
+
+
+// ESTADISTICAS FREE
 Route::middleware('auth:api')
         ->get('estadisticasFree/clientesTodos/{sectoristaId}', 'Apis\Estadisticas\estadisticasFreeController@mostrarClientes');
-
 
 Route::middleware('auth:api')
         ->get('estadisticasFree/estadisticasClientes/{sectoristaId}', 'Apis\Estadisticas\estadisticasFreeController@estadisticasClientes');

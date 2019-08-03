@@ -22,7 +22,7 @@ class gestorEmpresasController extends Controller
     public function mostrarClientes($gestorId)
     {
         $fechaActual = date('Y-m-d');
-        $gestorDatos = gestores::select( "gestores.correo_id as gestorCorreo",
+        $gestorDatos = gestores::select( "u.email as gestorCorreo",
                                             "gestores.sector_id as sectorId",
                                             "p.nombre as personaNombre", 
                                             "p.imagen as personaImagen")
@@ -31,82 +31,87 @@ class gestorEmpresasController extends Controller
                                         ->where('gestores.estado' , '=', 1)
                                         ->where('gestores.id', '=', $gestorId)
                                         ->first();
+        
+        $numeroDocumentosGestor = documentos::select("documentos.id")
+                                            ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                            ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                            ->where('sct.id', '=', $gestorDatos->sectorId)
+                                            ->where('documentos.saldo','>',0)
+                                            ->count();
 
-        $numeroDocumentosSectoristaFree = documentos::select("documentos.id")
-                                                    ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
-                                                    ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                    ->where('sct.id', '=', $gestorDatos->sectorId)
-                                                    ->where('documentos.saldo','>',0)
-                                                    ->count();
 
-        $sumaImportesDocumentosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
+        
+
+        $sumaImportesDocumentosGestor = documentos::select("documentos.id", "documentos.importe as documentosImporte")
                                                         ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                         ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                         ->where('sct.id', '=', $gestorDatos->sectorId)
                                                         ->where('documentos.saldo','>',0)
                                                         ->sum("documentos.importe");
         
-        $numeroDocumentosVencidosSectoristaFree = documentos::select("documentos.id")
+        $numeroDocumentosVencidosGestor = documentos::select("documentos.id")
+                                                        ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                        ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                        ->where('sct.id', '=', $gestorDatos->sectorId)
+                                                        ->where('documentos.fechavencimiento', '<', $fechaActual)
+                                                        ->where('documentos.saldo','>',0)
+                                                        ->count();
+        
+        
+        $sumaImportesDocumentosVencidosGestor = documentos::select("documentos.id", "documentos.importe as documentosImporte")
                                                             ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                             ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                             ->where('sct.id', '=', $gestorDatos->sectorId)
                                                             ->where('documentos.fechavencimiento', '<', $fechaActual)
                                                             ->where('documentos.saldo','>',0)
-                                                            ->count();
+                                                            ->sum("documentos.importe");
+        
+        // // echo $gestorDatos.'<br>';
+        // // echo $numeroDocumentosSectoristaFree.'<br>';
+        // // echo $sumaImportesDocumentosSectoristaFree.'<br>';
+        // // echo $numeroDocumentosVencidosSectoristaFree.'<br>';
+        // // echo $sumaImportesDocumentosVencidosSectoristaFree;
 
-        $sumaImportesDocumentosVencidosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
-                                                                    ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
-                                                                    ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                                    ->where('sct.id', '=', $gestorDatos->sectorId)
-                                                                    ->where('documentos.fechavencimiento', '<', $fechaActual)
-                                                                    ->where('documentos.saldo','>',0)
-                                                                    ->sum("documentos.importe");
-
-        // echo $gestorDatos.'<br>';
-        // echo $numeroDocumentosSectoristaFree.'<br>';
-        // echo $sumaImportesDocumentosSectoristaFree.'<br>';
-        // echo $numeroDocumentosVencidosSectoristaFree.'<br>';
-        // echo $sumaImportesDocumentosVencidosSectoristaFree;
-        $clientesGestor = gestores::select('gestores.id as gestorId','c.estado as clientesEstado', 'c.id as clienteId',
+        $clientesGestores = clientes::select('clientes.estado as clientesEstado', 'clientes.id as clienteId',
                                                     'p.nombre as personaNombre', 
-                                                    "c.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
+                                                    "clientes.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
                                                     DB::raw("SUM(d.importe) as sumaImportesDocumentos") )
-                                        ->leftjoin('sectores as sct', 'sct.id', '=', 'gestores.sector_id')
-                                        ->leftjoin('clientes as c', 'c.sector_id', '=', 'sct.id')
-                                        ->leftjoin('documentos as d', 'd.cliente_id', '=', 'c.id')
-                                        ->leftjoin('users as u', 'u.id', '=', 'c.correo_id')
+                                        ->leftjoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                                        ->leftjoin('gestores as g', 'g.sector_id', '=', 'sct.id')
+                                        ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
-                                        
-                                        ->where('gestores.id', '=', $gestorId)
+                                        ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                                        ->where('g.id', '=', $gestorId)
                                         ->where('d.saldo','>',0)
-                                        ->groupBy('gestores.id')
+                                        ->groupBy('clientes.id')
                                         ->get();
-
-        if(sizeof($clientesGestor) > 0){
-            $listaClientesSectoristaFree = array(
-                                                array(
-                                                    'clienteId' => 0,
-                                                    'gestorId' => 0,
-                                                    'personaNombre' => 0,
-                                                    'personaImagen' => 0,
-                                                    'numeroDocumentos' => 0,
-                                                    'sumaImportesDocumentos' => 0,
-                                                    'numeroDocumentosVencidos' => 0,
-                                                    'sumaImportesDocumentosVencidos' => 0,
-                                                ),
-                                            );
+        
+        
+        if(sizeof($clientesGestores) > 0){
+            $listaClientesGestores= array(
+                                    array(
+                                        'clienteId' => 0,
+                                        'gestorId' => 0,
+                                        'personaNombre' => 0,
+                                        'personaImagen' => 0,
+                                        'numeroDocumentos' => 0,
+                                        'sumaImportesDocumentos' => 0,
+                                        'numeroDocumentosVencidos' => 0,
+                                        'sumaImportesDocumentosVencidos' => 0,
+                                    ),
+                                );
             $cont = 0;
-            foreach($clientesGestor as $clientesSectoristas){
+            foreach($clientesGestores as $clientesGestor){
                 
-                $listaClientesSectoristaFree[$cont]['clienteId'] = $clientesSectoristas->clienteId;
-                $listaClientesSectoristaFree[$cont]['gestorId'] = $clientesSectoristas->gestorId;
-                $listaClientesSectoristaFree[$cont]['personaNombre'] = $clientesSectoristas->personaNombre;
-                $listaClientesSectoristaFree[$cont]['personaImagen'] = $clientesSectoristas->personaImagen;
-                $listaClientesSectoristaFree[$cont]['numeroDocumentos'] = $clientesSectoristas->numeroDocumentos;
-                $listaClientesSectoristaFree[$cont]['sumaImportesDocumentos'] = sprintf("%.2f", $clientesSectoristas->sumaImportesDocumentos);
+                $listaClientesGestores[$cont]['clienteId'] = $clientesGestor->clienteId;
+                $listaClientesGestores[$cont]['gestorId'] = $gestorId;
+                $listaClientesGestores[$cont]['personaNombre'] = $clientesGestor->personaNombre;
+                $listaClientesGestores[$cont]['personaImagen'] = $clientesGestor->personaImagen;
+                $listaClientesGestores[$cont]['numeroDocumentos'] = $clientesGestor->numeroDocumentos;
+                $listaClientesGestores[$cont]['sumaImportesDocumentos'] = sprintf("%.2f", $clientesGestor->sumaImportesDocumentos);
 
                 $fechaProrroga = acciones::select('fechaprorroga as accionesFechaProrroga')
-                                            ->where('cliente_id', '=', $clientesSectoristas->clienteId)
+                                            ->where('cliente_id', '=', $clientesGestor->clienteId)
                                             ->latest()
                                             ->first();
                 if($fechaProrroga){
@@ -117,22 +122,20 @@ class gestorEmpresasController extends Controller
                         $fecha = $fechaProrroga->accionesFechaProrroga;
                         $signo = '>';
                     }
-                    
-                    
                 }else{
                     $fecha = $fechaActual;
                     $signo = '<';
                 }
 
                 
-                $clientesSectoristaEspecifico = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
-                                                        DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos") )
+                $clientesGestorEspecifico = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                                                                DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos"))
                                                         ->leftjoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
-                                                        ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
+                                                        ->leftjoin('gestores as g', 'g.sector_id', '=', 'sct.id')
                                                         ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
                                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
                                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
-                                                        ->where('clientes.id', '=', $clientesSectoristas->clienteId)
+                                                        ->where('clientes.id', '=', $clientesGestor->clienteId)
                                                         ->where('d.fechavencimiento', '<', $fechaActual )
                                                         ->where('d.fechavencimiento', $signo, $fecha )
                                                         ->where('d.saldo', '>' , 0 )
@@ -141,18 +144,18 @@ class gestorEmpresasController extends Controller
 
                 $numeroDocumentosVencidos = 0;
                 
-                if($clientesSectoristaEspecifico['numeroDocumentosVencidos'] != null){
-                    $numeroDocumentosVencidos = $clientesSectoristaEspecifico['numeroDocumentosVencidos'];
+                if($clientesGestorEspecifico['numeroDocumentosVencidos'] != null){
+                    $numeroDocumentosVencidos = $clientesGestorEspecifico['numeroDocumentosVencidos'];
                 }
-                $listaClientesSectoristaFree[$cont]['numeroDocumentosVencidos'] = $numeroDocumentosVencidos;
+                $listaClientesGestores[$cont]['numeroDocumentosVencidos'] = $numeroDocumentosVencidos;
                 
 
 
                 $sumaImportesDocumentosVencidos = 0;
-                if($clientesSectoristaEspecifico['sumaImportesDocumentosVencidos'] != null){
-                    $sumaImportesDocumentosVencidos = $clientesSectoristaEspecifico['sumaImportesDocumentosVencidos'];
+                if($clientesGestorEspecifico['sumaImportesDocumentosVencidos'] != null){
+                    $sumaImportesDocumentosVencidos = $clientesGestorEspecifico['sumaImportesDocumentosVencidos'];
                 }
-                $listaClientesSectoristaFree[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f", $sumaImportesDocumentosVencidos);
+                $listaClientesGestores[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f", $sumaImportesDocumentosVencidos);
                 
                 $cont = $cont+1;
 
@@ -160,24 +163,22 @@ class gestorEmpresasController extends Controller
 
         }
 
-    
-
-        if (sizeof($clientesSectorista) > 0){
+        if (sizeof($listaClientesGestores) > 0){
             return json_encode(array("code" => true, 
-                                    "result"=>$listaClientesSectoristaFree, 
+                                    "result"=>$listaClientesGestores, 
                                     "gestor"=>$gestorDatos,
-                                    "numeroDocumentos"=>$numeroDocumentosSectoristaFree,
-                                    "sumaImporteDocumentos"=>sprintf("%.2f", $sumaImportesDocumentosSectoristaFree),
-                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosSectoristaFree,
-                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosSectoristaFree), 
+                                    "numeroDocumentos"=>$numeroDocumentosGestor,
+                                    "sumaImporteDocumentos"=>sprintf("%.2f", $sumaImportesDocumentosGestor),
+                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosGestor,
+                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosGestor), 
                                     "load"=>true ));
         }else{
             return json_encode(array("code" => false, 
                                     "gestor"=>$gestorDatos,
-                                    "numeroDocumentos"=>$numeroDocumentosSectoristaFree,
-                                    "sumaImporteDocumentos"=> sprintf("%.2f", $sumaImportesDocumentosSectoristaFree),  
-                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosSectoristaFree,
-                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosSectoristaFree), 
+                                    "numeroDocumentos"=>$numeroDocumentosGestor,
+                                    "sumaImporteDocumentos"=> sprintf("%.2f", $sumaImportesDocumentosGestor),  
+                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosGestor,
+                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosGestor), 
                                     "load"=>true));
         }
     }
@@ -244,108 +245,112 @@ class gestorEmpresasController extends Controller
 
     // MOSTRAR TODOS LOS CLIENTES CON TODOS SUS DOCUMENTOS E IMPORTES POR VENCER Y VENCIDOS
 
-    public function mostrarClientesTODO($sectoristaId)
+    public function mostrarClientesTODO($gestorId)
     {
         $fechaActual = date('Y-m-d');
-        $sectoristarDatos = sectoristas::select( "sectoristas.correo_id as sectoristaCorreo",
+        $gestorDatos = gestores::select( "u.email as gestorCorreo",
                                             "sct.id as sectorId",
                                             "p.nombre as personaNombre", 
                                             "p.imagen as personaImagen")
-                            ->join('sectores as sct', 'sct.sectorista_id', '=', 'sectoristas.id')
-                            ->join('users as u', 'u.id', '=', 'sectoristas.correo_id')
+                            ->join('sectores as sct', 'sct.id', '=', 'gestores.sector_id')
+                            ->join('users as u', 'u.id', '=', 'gestores.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
-                            ->where('sectoristas.id', '=', $sectoristaId)
+                            ->where('gestores.id', '=', $gestorId)
                             ->first();
+        
 
-        $numeroDocumentosSectoristaFree = documentos::select("documentos.id")
-                                                ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
-                                                ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                ->where('sct.id', '=', $sectoristarDatos->sectorId)
-                                                ->count();
+        $numeroDocumentosGestor = documentos::select("documentos.id")
+                                            ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                            ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                            ->where('sct.id', '=', $gestorDatos->sectorId)
+                                            ->count();
 
-        $sumaImportesDocumentosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
+        
+
+        $sumaImportesDocumentosGestor= documentos::select("documentos.id", "documentos.importe as documentosImporte")
                                                         ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                         ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                        ->where('sct.id', '=', $sectoristarDatos->sectorId)
+                                                        ->where('sct.id', '=', $gestorDatos->sectorId)
                                                         ->sum("documentos.importe");
         
-        $numeroDocumentosVencidosSectoristaFree = documentos::select("documentos.id")
+        
+
+        $numeroDocumentosVencidosGestor = documentos::select("documentos.id")
+                                                        ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
+                                                        ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
+                                                        ->where('sct.id', '=', $gestorDatos->sectorId)
+                                                        ->where('documentos.fechavencimiento', '<', $fechaActual)
+                                                        ->count();
+        
+
+        $sumaImportesDocumentosVencidosGestor= documentos::select("documentos.id", "documentos.importe as documentosImporte")
                                                             ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                             ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                            ->where('sct.id', '=', $sectoristarDatos->sectorId)
+                                                            ->where('sct.id', '=', $gestorDatos->sectorId)
                                                             ->where('documentos.fechavencimiento', '<', $fechaActual)
-                                                            ->count();
+                                                            ->sum("documentos.importe");
+        
 
-        $sumaImportesDocumentosVencidosSectoristaFree = documentos::select("documentos.id", "documentos.importe as documentosImporte")
-                                                                    ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
-                                                                    ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
-                                                                    ->where('sct.id', '=', $sectoristarDatos->sectorId)
-                                                                    ->where('documentos.fechavencimiento', '<', $fechaActual)
-                                                                    ->sum("documentos.importe");
-
-
-        $clientesSectorista = clientes::select('clientes.estado as clientesEstado', 'clientes.id as clienteId',
-                                                    'scts.id as sectoristaId', 'p.nombre as personaNombre', 
+        $clientesGestor = clientes::select('clientes.estado as clientesEstado', 'clientes.id as clienteId',
+                                                    'p.nombre as personaNombre', 
                                                     "clientes.imagen as personaImagen", DB::raw('count(d.id) as numeroDocumentos'),
                                                     DB::raw("SUM(d.importe) as sumaImportesDocumentos") )
                                         ->leftjoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
-                                        ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
+                                        ->leftjoin('gestores as g', 'g.sector_id', '=', 'sct.id')
                                         ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
-                                        ->where('scts.id', '=', $sectoristaId)
+                                        ->where('g.id', '=', $gestorId)
                                         ->groupBy('clientes.id')
                                         ->get();
 
-        if(sizeof($clientesSectorista) > 0){
-            $listaClientesSectoristaFree = array(
-                                                array(
-                                                    'clienteId' => 0,
-                                                    'sectoristaId' => 0,
-                                                    'personaNombre' => 0,
-                                                    'personaImagen' => 0,
-                                                    'numeroDocumentos' => 0,
-                                                    'sumaImportesDocumentos' => 0,
-                                                    'numeroDocumentosVencidos' => 0,
-                                                    'sumaImportesDocumentosVencidos' => 0,
-                                                ),
-                                            );
+        if(sizeof($clientesGestor) > 0){
+            $listaClientesGestor = array(
+                                    array(
+                                        'clienteId' => 0,
+                                        'gestorId' => 0,
+                                        'personaNombre' => 0,
+                                        'personaImagen' => 0,
+                                        'numeroDocumentos' => 0,
+                                        'sumaImportesDocumentos' => 0,
+                                        'numeroDocumentosVencidos' => 0,
+                                        'sumaImportesDocumentosVencidos' => 0,
+                                    ),
+                                );
             $cont = 0;
-            foreach($clientesSectorista as $clientesSectoristas){
-                $listaClientesSectoristaFree[$cont]['clienteId'] = $clientesSectoristas->clienteId;
-                $listaClientesSectoristaFree[$cont]['sectoristaId'] = $clientesSectoristas->sectoristaId;
-                $listaClientesSectoristaFree[$cont]['personaNombre'] = $clientesSectoristas->personaNombre;
-                $listaClientesSectoristaFree[$cont]['personaImagen'] = $clientesSectoristas->personaImagen;
-                $listaClientesSectoristaFree[$cont]['numeroDocumentos'] = $clientesSectoristas->numeroDocumentos;
-                $listaClientesSectoristaFree[$cont]['sumaImportesDocumentos'] = sprintf("%.2f", $clientesSectoristas->sumaImportesDocumentos);
+            foreach($clientesGestor as $clienteGestor){
+                $listaClientesGestor[$cont]['clienteId'] = $clienteGestor->clienteId;
+                $listaClientesGestor[$cont]['gestorId'] = $gestorId;
+                $listaClientesGestor[$cont]['personaNombre'] = $clienteGestor->personaNombre;
+                $listaClientesGestor[$cont]['personaImagen'] = $clienteGestor->personaImagen;
+                $listaClientesGestor[$cont]['numeroDocumentos'] = $clienteGestor->numeroDocumentos;
+                $listaClientesGestor[$cont]['sumaImportesDocumentos'] = sprintf("%.2f", $clienteGestor->sumaImportesDocumentos);
 
-
-                $clientesSectoristaEspecifico = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                $clientesGestorEspecifico = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
                                                         DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos") )
                                                         ->leftjoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
                                                         ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
                                                         ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
                                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
                                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
-                                                        ->where('clientes.id', '=', $clientesSectoristas->clienteId)
+                                                        ->where('clientes.id', '=', $clienteGestor->clienteId)
                                                         ->where('d.fechavencimiento', '<', $fechaActual)
                                                         ->groupBy('clientes.id')
                                                         ->first();
 
                 $numeroDocumentosVencidos = 0;
-                
-                if($clientesSectoristaEspecifico['numeroDocumentosVencidos'] != null){
-                    $numeroDocumentosVencidos = $clientesSectoristaEspecifico['numeroDocumentosVencidos'];
+                if($clientesGestorEspecifico['numeroDocumentosVencidos'] != null){
+                    $numeroDocumentosVencidos = $clientesGestorEspecifico['numeroDocumentosVencidos'];
                 }
-                $listaClientesSectoristaFree[$cont]['numeroDocumentosVencidos'] = $numeroDocumentosVencidos;
+                $listaClientesGestor[$cont]['numeroDocumentosVencidos'] = $numeroDocumentosVencidos;
                 
 
 
                 $sumaImportesDocumentosVencidos = 0;
-                if($clientesSectoristaEspecifico['sumaImportesDocumentosVencidos'] != null){
-                    $sumaImportesDocumentosVencidos = $clientesSectoristaEspecifico['sumaImportesDocumentosVencidos'];
+                if($clientesGestorEspecifico['sumaImportesDocumentosVencidos'] != null){
+                    $sumaImportesDocumentosVencidos = $clientesGestorEspecifico['sumaImportesDocumentosVencidos'];
                 }
-                $listaClientesSectoristaFree[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f", $sumaImportesDocumentosVencidos);
+                $listaClientesGestor[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f", $sumaImportesDocumentosVencidos);
                 
                 $cont = $cont+1;
 
@@ -354,22 +359,22 @@ class gestorEmpresasController extends Controller
         }
 
         
-        if (sizeof($clientesSectorista) > 0){
+        if (sizeof($clientesGestor) > 0){
             return json_encode(array("code" => true, 
-                                    "result"=>$listaClientesSectoristaFree, 
-                                    "sectorista"=>$sectoristarDatos,
-                                    "numeroDocumentos"=>$numeroDocumentosSectoristaFree,
-                                    "sumaImporteDocumentos"=>sprintf("%.2f", $sumaImportesDocumentosSectoristaFree),
-                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosSectoristaFree,
-                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosSectoristaFree), 
+                                    "result"=>$listaClientesGestor, 
+                                    "gestor"=>$gestorDatos,
+                                    "numeroDocumentos"=>$numeroDocumentosGestor,
+                                    "sumaImporteDocumentos"=>sprintf("%.2f", $sumaImportesDocumentosGestor),
+                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosGestor,
+                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosGestor), 
                                     "load"=>true ));
         }else{
             return json_encode(array("code" => false, 
-                                    "sectorista"=>$sectoristarDatos,
-                                    "numeroDocumentos"=>$numeroDocumentosSectoristaFree,
-                                    "sumaImporteDocumentos"=> sprintf("%.2f", $sumaImportesDocumentosSectoristaFree),  
-                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosSectoristaFree,
-                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosSectoristaFree), 
+                                    "gestor"=>$gestorDatos,
+                                    "numeroDocumentos"=>$numeroDocumentosGestor,
+                                    "sumaImporteDocumentos"=> sprintf("%.2f", $sumaImportesDocumentosGestor),  
+                                    "numeroDocumentosVencidos"=>$numeroDocumentosVencidosGestor,
+                                    "sumaImportesDocumentosVencidos"=> sprintf("%.2f", $sumaImportesDocumentosVencidosGestor), 
                                     "load"=>true));
         }
     }

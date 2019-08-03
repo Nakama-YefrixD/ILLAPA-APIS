@@ -517,7 +517,7 @@ class GestionController extends Controller
                             ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
                             ->where('clientes.id', '=', $clienteId)
                             ->first();
-
+        
         $documentosCliente = documentos::select("td.nombre as tipoDocumentoIdentidad", 'documentos.numero as numero',
                                                 'documentos.fechavencimiento as fechavencimiento', 
                                                 'documentos.importe as importe', 'documentos.saldo as saldo',
