@@ -781,10 +781,12 @@ class DatoController extends Controller
         $contCorreos = $request->contCorreos;
         $sectorId = $request->sectorId;
 
-
-        $cliente = clientes::find($idCliente);
-        $cliente->sector_id = $sectorId;
-        $cliente->update();
+        if($sectorId != null){
+            $cliente = clientes::find($idCliente);
+            $cliente->sector_id = $sectorId;
+            $cliente->update();
+        }
+       
         
         // $idSocio = $request->idSocio; ID DEL SOCIO !! DEL CLIENTE
         

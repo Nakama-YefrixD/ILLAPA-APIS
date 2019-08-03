@@ -103,19 +103,14 @@ class gestionFreeController extends Controller
                                             ->where('cliente_id', '=', $clientesSectoristas->clienteId)
                                             ->latest()
                                             ->first();
+                $prorroga = false;
+                $fecha = $fechaActual;
+
                 if($fechaProrroga){
-                    if($fechaProrroga->accionesFechaProrroga == null){
-                        $fecha = $fechaActual;
-                        $signo = '<';
-                    }else{
-                        $fecha = $fechaProrroga->accionesFechaProrroga;
-                        $signo = '>';
-                    }
-                    
-                    
+                    $prorroga = true;
+                    $fecha = $fechaProrroga->accionesFechaProrroga;
                 }else{
-                    $fecha = $fechaActual;
-                    $signo = '<';
+                    $prorroga = false;
                 }
 
                 
@@ -127,9 +122,18 @@ class gestionFreeController extends Controller
                                                         ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
                                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
                                                         ->where('clientes.id', '=', $clientesSectoristas->clienteId)
-                                                        ->where('d.fechavencimiento', '<', $fechaActual )
-                                                        ->where('d.fechavencimiento', $signo, $fecha )
                                                         ->where('d.saldo', '>' , 0 )
+                                                        ->where(function($query) use ($prorroga, $fecha, $fechaActual){
+                                                            if($prorroga == false) {
+                                                                $query->where('d.fechavencimiento', '<', $fechaActual );
+                                                            }else{
+                                                                if($fecha <= $fechaActual){
+                                                                    $query->where('d.fechavencimiento', '<', $fechaActual );
+                                                                }else{
+                                                                    $query->where('d.fechavencimiento', '>', $fechaActual );
+                                                                }
+                                                            }
+                                                        })
                                                         ->groupBy('clientes.id')
                                                         ->first();
 
