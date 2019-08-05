@@ -58,10 +58,10 @@ class LoginController extends Controller
         $validacion = User::where('email', '=', $username)
                             ->where('estado','=',1) 
                             ->first();
-        $esEmpresa = empresas::where('correo_id','=',$validacion->id)
+        $siSocio = socios::where('correo_id','=',$validacion->id)
                                 ->where('estado','=',1)
                                 ->first();
-        if($esEmpresa){
+        if($siSocio){
 
             if(filter_var($username, FILTER_VALIDATE_EMAIL)) {
                 if (Auth::attempt(['email' => $username, 'password' => $password])) {
@@ -163,6 +163,106 @@ class LoginController extends Controller
                 }else{
 
                     return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>99, "id" =>99, "imagenLogeado"=>$persona->personaImagen));
+                }
+                
+                
+                
+            }
+            return response()->json(false);
+        } else {
+            if(Auth::attempt(['codigo' => $username, 'password' => $password])) {
+                $user = $this->guard()->user();
+                $user->api_token();
+
+                return response()->json([
+                    $user,
+                    true
+                ]);
+            }
+            return response()->json(false);
+        }
+
+        // return $this->sendFailedLoginResponse($request);
+        return response()->json([false]);
+    }
+
+    public function loginSocialityApi(Request $request)
+    {
+        $username = $request->email;
+        $password = 'FacebokLogin';
+
+        $correo = User::select( "users.email" )
+                            ->where('users.email', '=', $username)
+                            ->first();
+        if(!$correo){
+            return json_encode(array("code" => false));
+        }
+        
+
+        if(filter_var($username, FILTER_VALIDATE_EMAIL)) {
+            if (Auth::attempt(['email' => $username, 'password' => $password])) {
+                $user = $this->guard()->user();
+                $user->api_token;
+
+                $siAdmin = empresas::where('correo_id', '=', $user->id)
+                                    ->where('id', '=', 1)
+                                    ->where('nombre', '=', 'ILLAPA')
+                                    ->first();
+
+                $persona = User::select( "p.imagen as personaImagen",
+                                             "p.nombre as personaNombre" )
+                                ->join('personas as p', 'p.id', '=', 'users.persona_id')
+                                ->where('users.id', '=', $user->id)
+                                ->first();
+
+                if ($siAdmin){
+
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>99, "id" =>$siAdmin->id , "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                }
+
+
+                $siEmpresa = empresas::where('correo_id', '=', $user->id)
+                            ->where('estado','=','1')
+                            ->first();
+
+                if ($siEmpresa){
+
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>1, "id" =>$siEmpresa->id  , "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                }
+
+                $siSocioFree = sectoristas::where('socio_id', '=', 1)
+                                    ->where('correo_id', '=', $user->id)
+                                    ->where('estado', '=', 1)
+                                    ->first();
+                if ($siSocioFree){
+
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>5, "id" =>$siSocioFree->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                }
+
+                $siSocio = socios::where('correo_id', '=', $user->id)
+                        ->where('estado','=','1')
+                        ->first();
+                if ($siSocio){
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>2, "id" =>$siSocio->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                }
+                $siSectorista = sectoristas::where('correo_id', '=', $user->id)
+                        ->where('estado','=','1')
+                        ->first();
+                        
+                if ($siSectorista){
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>3, "id" =>$siSectorista->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                }
+
+                $siGestor = gestores::where('correo_id', '=', $user->id)
+                                        ->where('estado','=','1')
+                                        ->first();
+                if ($siGestor){
+                                
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>4, "id" =>$siGestor->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    
+                }else{
+
+                    return json_encode(array("code" => true, "api_token"=>$user->api_token, "tipoUsuario"=>99, "id" =>99, "imagenLogeado"=>$persona->personaImagen));
                 }
                 
                 

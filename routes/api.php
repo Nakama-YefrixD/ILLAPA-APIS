@@ -24,6 +24,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 // Route::get("/registrarget/{dni}/{email}/{pass}", 'Apis\RegisterController@registrarget');
 Route::post("/registrarpost", 'Apis\RegisterController@registrarpost');
 Route::post('/loginApi', 'Auth\LoginController@loginApi');
+Route::post('/loginSocialityApi', 'Auth\LoginController@loginSocialityApi');
 
 Route::get('tiposDocumentosIdentidad', 'Apis\globales@tiposDocumentosIdentidad');
 
