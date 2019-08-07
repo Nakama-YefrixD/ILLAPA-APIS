@@ -88,7 +88,7 @@ class importarController extends Controller
 
     public function ejemplosimportardescargar($nombreExcel)
     {
-        $file= public_path(). "\ExamplesImportacion\D".$nombreExcel.".xlsx";
+        $file= public_path(). "/ExamplesImportacion/D".$nombreExcel.".xlsx";
         $headers = array(
             'Content-Type: application/xlsx',
             );
@@ -597,18 +597,30 @@ class importarController extends Controller
                         $exisCliente= clientes::where('correo_id', '=', $userId )
                                             ->where('sector_id','=',$sector->id)
                                             ->first();
+
+
                         if($exisCliente){
-                            $documento = new documentos;
-                            $documento->cliente_id = $exisCliente->id;
-                            $documento->tipoDocumento_id  = $tiposDocumentos->id;
-                            $documento->numero = $numeroDocumento;
-                            $documento->fechaemision = $fechaEmision;
-                            $documento->fechavencimiento = $fechaVencida;
-                            $documento->tipoMoneda_id = $tiposMonedas->id;
-                            $documento->importe = $importe;
-                            $documento->saldo = $importe;
-                            $documento->estado = 1;
-                            $documento->save();
+                            $exisDocumento = documentos::where('numero', '=', $numeroDocumento )
+                                                        ->where('tipoDocumento_id', '=', $tiposDocumentos->id)
+                                                        ->first(); 
+                            if($exisDocumento){
+                                $documento = documentos::find($exisDocumento->id);
+                                $documento->importe = $exisDocumento->importe;
+                                $documento->update();
+                            }else{
+                                $documento = new documentos;
+                                $documento->cliente_id = $exisCliente->id;
+                                $documento->tipoDocumento_id  = $tiposDocumentos->id;
+                                $documento->numero = $numeroDocumento;
+                                $documento->fechaemision = $fechaEmision;
+                                $documento->fechavencimiento = $fechaVencida;
+                                $documento->tipoMoneda_id = $tiposMonedas->id;
+                                $documento->importe = $importe;
+                                $documento->saldo = $importe;
+                                $documento->estado = 1;
+                                $documento->save();
+                            }                       
+                            
 
                         }else{
                             
@@ -653,11 +665,12 @@ class importarController extends Controller
             
             $tipoIdentificacion = $objPHPExcel->getActiveSheet()->getCell('a'.$i)->getCalculatedValue();
             $numeroIdentificacion = $objPHPExcel->getActiveSheet()->getCell('b'.$i)->getCalculatedValue();
-            $numeroDocumento = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
-            $tipoPago = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
-            $numeroPago = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
-            $fechaEmision = $objPHPExcel->getActiveSheet()->getCell('f'.$i)->getCalculatedValue();
-            $importe = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
+            $tipoDocumento = $objPHPExcel->getActiveSheet()->getCell('c'.$i)->getCalculatedValue();
+            $numeroDocumento = $objPHPExcel->getActiveSheet()->getCell('d'.$i)->getCalculatedValue();
+            $tipoPago = $objPHPExcel->getActiveSheet()->getCell('e'.$i)->getCalculatedValue();
+            $numeroPago = $objPHPExcel->getActiveSheet()->getCell('f'.$i)->getCalculatedValue();
+            $fechaEmision = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
+            $importe = $objPHPExcel->getActiveSheet()->getCell('h'.$i)->getCalculatedValue();
 
             $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
                                                                  ->first();
@@ -670,6 +683,13 @@ class importarController extends Controller
                                     ->first();
                 
             if(!$tiposPagos){
+                break;
+            }
+
+            $tiposDocumentos = tiposDocumentos::where('nombre','=',$tipoDocumento)
+                                                ->first();
+                
+            if(!$tiposDocumentos){
                 break;
             }
 
@@ -694,9 +714,12 @@ class importarController extends Controller
                         
 
                         if($exisCliente){
-                            $documentos = documentos::select('documentos.id as id', 'documentos.importe as importe', 'tm.nombre as monedaNombre')
-                                                    ->where('cliente_id','=',$exisCliente->id)
-                                                    ->where('numero','=',$numeroDocumento)
+                            $documentos = documentos::select('documentos.id as id', 
+                                                            'documentos.importe as importe', 
+                                                            'tm.nombre as monedaNombre')
+                                                    ->where('documentos.cliente_id','=',$exisCliente->id)
+                                                    ->where('documentos.numero','=',$numeroDocumento)
+                                                    ->where('documentos.tipoDocumento_id','=', $tiposDocumentos->id )
                                                     ->join('tiposMonedas as tm', 'tm.id','=','documentos.tipoDocumento_id')
                                                     ->first();
                             if($documentos){

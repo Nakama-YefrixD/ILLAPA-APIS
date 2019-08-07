@@ -29,7 +29,7 @@
                 </div>
             </div>
         </div>
-        <form role="form" method="post" accept-charset="utf-8" id="insertarAlumnos" enctype="multipart/form-data">
+        <form role="form" method="post" accept-charset="utf-8" id="insertarExcel" enctype="multipart/form-data">
         @csrf
 
             <div class="row">

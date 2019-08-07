@@ -210,12 +210,10 @@ class datosFreeController extends Controller
     }
 
 
-    public function mostrarSectores($gestorfreeId)
+    public function mostrarSectores($sectoristaId)
     {
-        $gestorFree = gestores::where('id','=', $gestorfreeId)
-                                ->first();
 
-        $sectores = sectores::where('id', '=', $gestorFree->sector_id)
+        $sectores = sectores::where('sectorista_id', '=', $sectoristaId)
                             ->get();
 
         $tiposTelefonos = tiposTelefonos::select('id','nombre')

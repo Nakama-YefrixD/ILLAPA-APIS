@@ -6,7 +6,7 @@ $(document).ready(function() {
 
     $("#subirLista").on("change", function() {
         event.preventDefault();
-        var formData = new FormData($("#insertarAlumnos")[0]);
+        var formData = new FormData($("#insertarExcel")[0]);
 
         $.ajax({
             url: "mostrarExcel",
@@ -30,9 +30,9 @@ $(document).ready(function() {
 
 
 
-    $('#insertarAlumnos').on('click', '.agregarExcel',function(event){
+    $('#insertarExcel').on('click', '.agregarExcel',function(event){
         event.preventDefault();
-        var formData = new FormData($("#insertarAlumnos")[0]);
+        var formData = new FormData($("#insertarExcel")[0]);
         var url = $('#seleccionarTipoExcel').val();
 
             $.confirm({
@@ -57,7 +57,7 @@ $(document).ready(function() {
                             success:function(data)
                             {
                                 if(data.estado != "correcto"){
-                                    
+                                    toastr.warning("Ocurrio un error al momento de subir el excel.");
                                     
                                 }else{
                                     
