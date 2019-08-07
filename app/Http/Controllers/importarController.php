@@ -644,8 +644,8 @@ class importarController extends Controller
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
         $userId = Auth::id();
-        $empresa = empresas::where('correo_id','=',$userId)
-                                ->first();
+        $socio = socios::where('correo_id','=',$userId)
+                        ->first();
 
            
 
@@ -660,7 +660,7 @@ class importarController extends Controller
             $importe = $objPHPExcel->getActiveSheet()->getCell('g'.$i)->getCalculatedValue();
 
             $tiposDocumentosIdentidad = tiposDocumentosIdentidad::where('nombre','=',$tipoIdentificacion)
-                                                                    ->first();
+                                                                 ->first();
                 
             if(!$tiposDocumentosIdentidad){
                 break;
@@ -701,6 +701,11 @@ class importarController extends Controller
                                                     ->first();
                             if($documentos){
                                 $saldo = $documentos->importe - $importe;
+                                
+                                $documento = documentos::find($documentos->id);
+                                $documento->saldo = $saldo;
+                                $documento->update();
+
                                 $pago = new pagos;
                                 $pago->documento_id = $documentos->id;
                                 $pago->tipoPago_id = $tiposPagos->id;
