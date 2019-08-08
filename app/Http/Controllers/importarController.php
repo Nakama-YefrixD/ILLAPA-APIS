@@ -717,6 +717,7 @@ class importarController extends Controller
 
                         if($exisCliente){
                             $documentos = documentos::select('documentos.id as id', 
+                                                            'documentos.saldo as saldo', 
                                                             'documentos.importe as importe', 
                                                             'tm.nombre as monedaNombre')
                                                     ->where('documentos.cliente_id','=',$exisCliente->id)
