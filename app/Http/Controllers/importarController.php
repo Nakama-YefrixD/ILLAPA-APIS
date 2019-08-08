@@ -602,6 +602,7 @@ class importarController extends Controller
                         if($exisCliente){
                             $exisDocumento = documentos::where('numero', '=', $numeroDocumento )
                                                         ->where('tipoDocumento_id', '=', $tiposDocumentos->id)
+                                                        ->where('cliente_id', '=', $exisCliente->id)
                                                         ->first(); 
                             if($exisDocumento){
                                 $documento = documentos::find($exisDocumento->id);
