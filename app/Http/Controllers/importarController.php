@@ -721,7 +721,7 @@ class importarController extends Controller
                                                     ->where('documentos.cliente_id','=',$exisCliente->id)
                                                     ->where('documentos.numero','=',$numeroDocumento)
                                                     ->where('documentos.tipoDocumento_id','=', $tiposDocumentos->id )
-                                                    ->join('tiposMonedas as tm', 'tm.id','=','documentos.tipoDocumento_id')
+                                                    ->join('tiposMonedas as tm', 'tm.id','=','documentos.tipoMoneda_id')
                                                     ->first();
                             if($documentos){
                                 $saldo = $documentos->saldo - $importe;
