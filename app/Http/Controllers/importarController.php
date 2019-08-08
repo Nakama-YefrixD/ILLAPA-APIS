@@ -606,6 +606,7 @@ class importarController extends Controller
                             if($exisDocumento){
                                 $documento = documentos::find($exisDocumento->id);
                                 $documento->importe = $exisDocumento->importe;
+                                $documento->saldo = $exisDocumento->importe;
                                 $documento->update();
                             }else{
                                 $documento = new documentos;
@@ -723,7 +724,7 @@ class importarController extends Controller
                                                     ->join('tiposMonedas as tm', 'tm.id','=','documentos.tipoDocumento_id')
                                                     ->first();
                             if($documentos){
-                                $saldo = $documentos->importe - $importe;
+                                $saldo = $documentos->saldo - $importe;
                                 
                                 $documento = documentos::find($documentos->id);
                                 $documento->saldo = $saldo;
