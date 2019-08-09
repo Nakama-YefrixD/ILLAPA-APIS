@@ -163,7 +163,7 @@ class gestorEmpresasController extends Controller
 
         }
 
-        if (sizeof($listaClientesGestores) > 0){
+        if (sizeof($clientesGestores) > 0){
             return json_encode(array("code" => true, 
                                     "result"=>$listaClientesGestores, 
                                     "gestor"=>$gestorDatos,
