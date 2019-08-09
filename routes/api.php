@@ -48,7 +48,13 @@ Route::middleware('auth:api')->get('gestion/documentosTodos/{gestorId}', 'Apis\G
 Route::middleware('auth:api')
         ->get('gestion/clientesTodosExcepcion/{gestorId}', 'Apis\Gestores\gestorEmpresasController@mostrarClientesTODO');
 
-
+// GESTION DE SECTORISTAS
+        // MOSTRAR LOS SECTORES DE UN SECTORISTA
+        Route::middleware('auth:api')->get('sectorista/gestion/sectores/{sectoristaId}', 'Apis\Gestores\gestionSectoristasController@mostrarSectores');
+        // MOSTRAR LOS CLIENTES DE UN SECTOR
+        Route::middleware('auth:api')->get('sectorista/gestion/sector/{sectorId}', 'Apis\Gestores\gestionSectoristasController@mostrarClientesSector');
+        // MOSTRAR TODOS LOS CLIENTES DE ESE SECTOR
+        Route::middleware('auth:api')->get('sectorista/gestion/clientesTodosExcepcion/{sectorId}', 'Apis\Gestores\gestionSectoristasController@mostrarClientesTODO');
 
 // GESTION FREE
 Route::middleware('auth:api')
@@ -73,7 +79,7 @@ Route::middleware('auth:api')
 Route::middleware('auth:api')
         ->get('vencimiento/socio/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosSocio');
 Route::middleware('auth:api')
-        ->get('vencimiento/sectorista/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosEmpresa');
+        ->get('vencimiento/sectorista/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosSectorista');
 Route::middleware('auth:api')
         ->get('vencimiento/gestor/fechasEspecifica/{id}', 'Apis\VencimientosController@fechasDocumentosGestor');
 Route::middleware('auth:api')
@@ -94,6 +100,11 @@ Route::middleware('auth:api')->get('estadistica/cliente/{clienteid}', 'Apis\Esta
 Route::middleware('auth:api')
         ->get('estadistica/gestor/clientesTodos/{gestorId}', 'Apis\Estadisticas\gestorEmpresasController@mostrarClientes');
 
+// ESTADISTICAS DE UN SECTORISTA
+Route::middleware('auth:api')
+        ->get('estadistica/sectorista/sectores/{sectoristaId}', 'Apis\Estadisticas\estadisticasSectoristasController@mostrarSectores');
+
+Route::middleware('auth:api')->get('estadistica/sectorista/sector/{sectorId}', 'Apis\Estadisticas\estadisticasSectoristasController@mostrarClientesTODO');
 
 // ESTADISTICAS FREE
 Route::middleware('auth:api')

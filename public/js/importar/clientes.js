@@ -7,25 +7,40 @@ $(document).ready(function() {
     $("#subirLista").on("change", function() {
         event.preventDefault();
         var formData = new FormData($("#insertarExcel")[0]);
+        $.confirm({
+            icon: 'fa fa-check',
+            title: 'Previsualización lista.!',
+            theme: 'modern',
+            type: 'green',
+            buttons: {
+                Cerrar: function() {
 
-        $.ajax({
-            url: "mostrarExcel",
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType:"json",
-                success:function(data)
-                {
-                    if(data.estado != "correcto"){
-                        $('#tabla').html(data.mensaje);
-                        
-                    }else{
-                        $('#tablasasd').html(data.mensaje);
-                        toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
-                    }
                 }
-        })
+            },
+            content: function() {
+                var self = this;
+                return $.ajax({
+                    url: "mostrarExcel",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType:"json",
+                        success:function(data)
+                        {
+                            if(data.estado != "correcto"){
+                                $('#tabla').html(data.mensaje);
+                                
+                            }else{
+                                $('#tablasasd').html(data.mensaje);
+                                toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
+                            }
+                        }
+                })
+            }
+        });
+
+        
     });
 
 
@@ -47,24 +62,38 @@ $(document).ready(function() {
                 editMenu: {
                     text: 'Agregar',
                     action: function () {
-                        $.ajax({
-                        url: url,
-                        type: "POST",
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        dataType:"json",
-                            success:function(data)
-                            {
-                                if(data.estado != "correcto"){
-                                    toastr.warning("Ocurrio un error al momento de subir el excel.");
-                                    
-                                }else{
-                                    
-                                    toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
+                        $.confirm({
+                            icon: 'fa fa-check',
+                            title: 'Los datos terminaron de agregarse.!',
+                            theme: 'modern',
+                            type: 'green',
+                            buttons: {
+                                Cerrar: function() {
+                
                                 }
+                            },
+                            content: function() {
+                                var self = this;
+                                return $.ajax({
+                                    url: url,
+                                    type: "POST",
+                                    data: formData,
+                                    contentType: false,
+                                    processData: false,
+                                    dataType:"json",
+                                        success:function(data)
+                                        {
+                                            if(data.estado != "correcto"){
+                                                toastr.warning("Ocurrio un error al momento de subir el excel.");
+                                                
+                                            }else{
+                                                
+                                                toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
+                                            }
+                                        }
+                                    })
                             }
-                        })
+                        });
                             
                     }
                 },
@@ -73,7 +102,6 @@ $(document).ready(function() {
                 }
             }
         });
-
 
      });
 
