@@ -106,9 +106,10 @@ class gestionFreeController extends Controller
                 $prorroga = false;
                 $fecha = $fechaActual;
 
+                $fechaProrr = $fecha;
                 if($fechaProrroga){
                     $prorroga = true;
-                    $fecha = $fechaProrroga->accionesFechaProrroga;
+                    $fechaProrr = $fechaProrroga->accionesFechaProrroga;
                 }else{
                     $prorroga = false;
                 }
@@ -123,14 +124,15 @@ class gestionFreeController extends Controller
                                                         ->leftjoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
                                                         ->where('clientes.id', '=', $clientesSectoristas->clienteId)
                                                         ->where('d.saldo', '>' , 0 )
-                                                        ->where(function($query) use ($prorroga, $fecha, $fechaActual){
+                                                        ->where(function($query) use ($prorroga, $fechaProrr, $fechaActual){
                                                             if($prorroga == false) {
                                                                 $query->where('d.fechavencimiento', '<', $fechaActual );
                                                             }else{
-                                                                if($fecha <= $fechaActual){
+                                                                if($fechaProrr <= $fechaActual){
                                                                     $query->where('d.fechavencimiento', '<', $fechaActual );
                                                                 }else{
                                                                     $query->where('d.fechavencimiento', '>', $fechaActual );
+                                                                    $query->where('d.fechavencimiento', '<', $fechaActual );
                                                                 }
                                                             }
                                                         })

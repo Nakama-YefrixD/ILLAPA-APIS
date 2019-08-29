@@ -412,6 +412,27 @@ class UsuarioController extends Controller
 
     }
 
+    public function mostrarSectoresSocio($socioid)
+    {
+
+        $sectoresSocio = sectores::select("sectores.descripcion as sectoresDescripcion",
+                                            "sectores.id as id",
+                                            "sectores.estGestor as estadoGestor",
+                                            "sectores.estSectorista as estadoSectorista")
+                                ->where('sectores.socio_id', '=', $socioid)
+                                ->get();
+
+        if (sizeof($sectoresSocio) > 0 ){
+            return json_encode(array("code" => true, 
+                                    "sectores"=>$sectoresSocio, 
+                                    "load"=>true  ));
+        }else{
+            return json_encode(array("code" => false,  
+                                    "load"=>true));
+        }
+
+    }
+
     public function mostrarSectoresSectorista($sectoristaId, $socioid)
     {
 
@@ -484,6 +505,27 @@ class UsuarioController extends Controller
 
     }
 
+
+    public function eliminarSectorSocio(Request $request)
+    {
+        $idSector = $request->idSector;
+        $idSocio= $request->idsocio;
+        
+        $sector = sectores::where('estSectorista', '=', 0)
+                            ->where('estGestor', '=', 0)
+                            ->where('id', '=', $idSector)
+                            ->first();
+
+        if($sector){
+            $sector = sectores::find($idSector);
+            $sector->delete();
+            return json_encode(array("code" => true,
+                                    "load"=>true));
+        }else{
+            return json_encode(array("code" => false, 
+                                    "load"=>true));
+        }
+    }
 
 
     public function mostrarSocioEmpresaSectores($socioId)

@@ -31,6 +31,14 @@ Route::get('tiposDocumentosIdentidad', 'Apis\globales@tiposDocumentosIdentidad')
 
 // GESTION
 Route::middleware('auth:api')->get('/empresasTodas', 'Apis\GestionController@mostrarEmpresas');
+
+// FILTRO MAYOR
+Route::middleware('auth:api')->get('/empresasTodas/filtroMayor', 'Apis\GestionController@filtroMayorAdm');
+Route::middleware('auth:api')->get('/filtroMayor/empresas/{idEmpresa}', 'Apis\GestionController@filtroMayorEmp');
+Route::middleware('auth:api')->get('/filtroMayor/sectorista/{idSectorista}', 'Apis\GestionController@filtroMayorSec');
+
+
+
 Route::middleware('auth:api')->get('/sociosTodos/{empresaid}', 'Apis\GestionController@mostrarSocios');
 Route::middleware('auth:api')->get('/clientesTodos/{socioid}', 'Apis\GestionController@mostrarClientes');
 Route::middleware('auth:api')->get('/sectoresTodos/{socioId}', 'Apis\GestionController@mostrarSectores');
@@ -160,9 +168,11 @@ Route::middleware('auth:api')->get('usuario/sociosTodos/{empresaid}', 'Apis\Usua
 Route::middleware('auth:api')->get('usuario/usuariosTodos/{socioid}', 'Apis\UsuarioController@mostrarUsuarios');
 
 Route::middleware('auth:api')->get('usuario/gestor/sector/{gestorid}/{socioid}', 'Apis\UsuarioController@mostrarSectorGestor');
+Route::middleware('auth:api')->get('usuario/socio/sectores/{socioid}', 'Apis\UsuarioController@mostrarSectoresSocio');
 
 Route::middleware('auth:api')->post('usuario/gestor/eliminarSector', 'Apis\UsuarioController@eliminarSectorGestor');
 Route::middleware('auth:api')->post('usuario/sectorista/eliminarSector', 'Apis\UsuarioController@eliminarSectorSectorista');
+Route::middleware('auth:api')->post('usuario/socio/eliminarSector', 'Apis\UsuarioController@eliminarSectorSocio');
 
 Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}/{socioid}', 'Apis\UsuarioController@mostrarSectoresSectorista');
 

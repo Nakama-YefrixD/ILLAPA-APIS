@@ -706,9 +706,444 @@ class GestionController extends Controller
 
     }
 
-   
+    public function filtroMayorAdm()
+    {
+
+        $fechaActual = date('Y-m-d');
+
+
+    
+        $socio = socios::select("socios.id as socioId", "socios.empresa_id as empresaId", 
+                                        "socios.estado as socioEstado", "p.nombre as personaNombre", 
+                                        "p.imagen as personaImagen", 
+                                        DB::raw('count(d.id) as numeroDocumentos'),
+                                        DB::raw("SUM(d.importe) as sumaImportesDocumentos"))
+                                        
+                                    ->leftJoin('users as u', 'u.id', '=', 'socios.correo_id')
+                                    ->leftJoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                    ->leftJoin('sectores as sct', 'sct.socio_id', '=', 'socios.id')
+                                    ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
+                                    ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
+                                    // ->where('socios.id', '=', $socioId)
+                                    ->where('d.saldo','>',0)
+                                    ->groupBy('socios.id')
+                                    ->first();
+
+
+        if($socio == null){
+            
+            $socio = socios::select("socios.id as socioId", 
+                                            "socios.empresa_id as empresaId", 
+                                            "socios.estado as socioEstado", 
+                                            "p.nombre as personaNombre", 
+                                            "p.imagen as personaImagen")
+                                    ->leftJoin('users as u', 'u.id', '=', 'socios.correo_id')
+                                    ->leftJoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                    ->leftJoin('sectores as sct', 'sct.socio_id', '=', 'socios.id')
+                                    ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
+                                    ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
+                                    // ->where('socios.id', '=', $socioId)
+                                    ->groupBy('socios.id')
+                                    ->first();
+
+            if($socio['numeroDocumentos'] == null){
+                $socio['numeroDocumentos'] = 0;
+            }
+
+            if($socio['sumaImportesDocumentos'] == null){
+                $socio['sumaImportesDocumentos'] = sprintf("%.2f", 0);
+            }
+        } 
+        $socioVencido = socios::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                                            DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos"))
+                                            
+                                        ->leftJoin('users as u', 'u.id', '=', 'socios.correo_id')
+                                        ->leftJoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                        ->leftJoin('sectores as sct', 'sct.socio_id', '=', 'socios.id')
+                                        ->leftJoin('clientes as c', 'c.sector_id', '=', 'sct.id')
+                                        ->leftJoin('documentos as d', 'd.cliente_id', '=', 'c.id')
+                                        // ->where('socios.id', '=', $socioId)
+                                        ->where('d.fechavencimiento', '<', $fechaActual)
+                                        ->where('d.saldo','>',0)
+                                        ->groupBy('socios.id')
+                                        ->first();
+        
+
+        
+        if($socioVencido == null){
+            $socioVencido = (object) array('numeroDocumentosVencidos' => 0,
+                                            'sumaImportesDocumentosVencidos' => sprintf("%.2f", 0));
+        }
+
+        // select c.estado, s.id, p.nombre
+        // from clientes c, sectores sct, sectoristas scts, socios s, users u, personas p
+        // where c.sector_id = sct.id && sct.sectorista_id = scts.id && scts.socio_id = s.id && u.id = c.correo_id && u.persona_id = p.id ;        
+        $clientesSocio = clientes::select('sct.id as sectorId' ,'clientes.estado as clientesEstado', 
+                                            'clientes.id as clienteId',
+                                            's.id as socioId', 'p.nombre as personaNombre', 
+                                            "clientes.imagen as personaImagen", 
+                                            DB::raw('count(d.id) as numeroDocumentos'),
+                                            DB::raw("SUM(d.importe) as sumaImportesDocumentos"))
+
+                            ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
+                            ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
+                            ->leftJoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                            ->leftJoin('socios as s', 's.id', '=', 'sct.socio_id')
+                            ->leftJoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                            ->where('clientes.estado', '=', 1)
+                            // ->where('s.id', '=', $socioId)
+                            ->where('d.saldo','>',0)
+                            ->groupBy('clientes.id')
+                            ->get();
+
+                            
+        
+        if(sizeof($clientesSocio) > 0 ){
+
+            $listClientesSocio = array(
+                array(
+                    'sectorId' => 0,
+                    'clienteId' => 0,
+                    'socioId' => 0,
+                    'personaNombre' => 0,
+                    'personaImagen' => 0,
+                    'numeroDocumentos' => 0,
+                    'sumaImportesDocumentos' =>0,
+                    'numeroDocumentosVencidos' =>0,
+                    'sumaImportesDocumentosVencidos' => 0,
+                    
+                ),
+                
+            );
+
+
+            $cont = 0;
+            foreach($clientesSocio as $clientesSocios){
+
+                $listClientesSocio[$cont]['sectorId'] = $clientesSocios->sectorId;
+                $listClientesSocio[$cont]['clienteId'] = $clientesSocios->clienteId;
+                $listClientesSocio[$cont]['socioId'] = $clientesSocios->socioId;
+                $listClientesSocio[$cont]['personaNombre'] = $clientesSocios->personaNombre;
+                $listClientesSocio[$cont]['personaImagen'] = $clientesSocios->personaImagen;
+                $listClientesSocio[$cont]['numeroDocumentos'] = $clientesSocios->numeroDocumentos;
+                $listClientesSocio[$cont]['sumaImportesDocumentos'] = $clientesSocios->sumaImportesDocumentos;
+                
+                $fechaProrroga = acciones::select('fechaprorroga as accionesFechaProrroga')
+                                            ->where('cliente_id', '=', $clientesSocios->clienteId)
+                                            ->latest()
+                                            ->first();
+                if($fechaProrroga){
+                    if($fechaProrroga->accionesFechaProrroga == null){
+                        $fecha = $fechaActual;
+                        $signo = '<';
+                    }else{
+                        $fecha = $fechaProrroga->accionesFechaProrroga;
+                        $signo = '>';
+                    }
+                    
+                    
+                }else{
+                    $fecha = $fechaActual;
+                    $signo = '<';
+                }
+
+
+                
+                $clienteSocio = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                                                DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos"))
+
+                                        ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
+                                        ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                        ->leftJoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                                        ->leftJoin('socios as s', 's.id', '=', 'sct.socio_id')
+                                        ->leftJoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                                        ->where('clientes.id', '=', $clientesSocios->clienteId)
+                                        ->where('d.fechavencimiento', '<', $fechaActual)
+                                        ->where('d.fechavencimiento', $signo, $fecha )
+                                        ->where('d.saldo', '>' , 0 )
+                                        ->groupBy('clientes.id')
+                                        ->first();
+
+
+                
+
+                $contDocumentosVencidos = 0;
+                if($clienteSocio['numeroDocumentosVencidos'] != null){
+                    $contDocumentosVencidos = $clienteSocio['numeroDocumentosVencidos'];
+                }
+                $listClientesSocio[$cont]['numeroDocumentosVencidos'] = $contDocumentosVencidos;
+
+                $sumaImportesDocumentosVencidos = 0;
+                if($clienteSocio['sumaImportesDocumentosVencidos'] != null){
+                    $sumaImportesDocumentosVencidos = $clienteSocio['sumaImportesDocumentosVencidos'];
+                }
+                $listClientesSocio[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f",$sumaImportesDocumentosVencidos);
+
+
+                $cont = $cont+1;
+            }
+        }
+
+        if (sizeof($clientesSocio) > 0){
+            return json_encode(array("code" => true, 
+                                        "socio"=>$socio,
+                                        "socioVencido"=>$socioVencido,
+                                        "result"=>$listClientesSocio, 
+                                        "load"=>true));
+        }else{
+            return json_encode(array("code" => false, 
+                                    "socio"=>$socio,
+                                    "socioVencido"=>$socioVencido,
+                                    "load"=>true));
+        }
+    }
+
+    public function filtroMayorEmp($idEmpresa)
+    {
+
+        $fechaActual = date('Y-m-d');
+
+        $clientesEmpresas = clientes::select('sct.id as sectorId' ,'clientes.estado as clientesEstado', 
+                                            'clientes.id as clienteId',
+                                            's.id as socioId', 'p.nombre as personaNombre', 
+                                            "clientes.imagen as personaImagen", 
+                                            DB::raw('count(d.id) as numeroDocumentos'),
+                                            DB::raw("SUM(d.importe) as sumaImportesDocumentos"))
+
+                                    ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
+                                    ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                    ->leftJoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                                    ->leftJoin('socios as s', 's.id', '=', 'sct.socio_id')
+                                    ->leftJoin('empresas as e', 'e.id', '=', 's.empresa_id')
+                                    ->leftJoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                                    ->where('clientes.estado', '=', 1)
+                                    ->where('e.id', '=', $idEmpresa)
+                                    ->where('d.saldo','>',0)
+                                    ->groupBy('clientes.id')
+                                    ->get();
+
+                            
+        
+        if(sizeof($clientesEmpresas) > 0 ){
+
+            $listclientesEmpresas = array(
+                array(
+                    'sectorId' => 0,
+                    'clienteId' => 0,
+                    'socioId' => 0,
+                    'personaNombre' => 0,
+                    'personaImagen' => 0,
+                    'numeroDocumentos' => 0,
+                    'sumaImportesDocumentos' =>0,
+                    'numeroDocumentosVencidos' =>0,
+                    'sumaImportesDocumentosVencidos' => 0,
+                    
+                ),
+                
+            );
+
+
+            $cont = 0;
+            foreach($clientesEmpresas as $clientesEmpresa){
+
+                $listclientesEmpresas[$cont]['sectorId'] = $clientesEmpresa->sectorId;
+                $listclientesEmpresas[$cont]['clienteId'] = $clientesEmpresa->clienteId;
+                $listclientesEmpresas[$cont]['socioId'] = $clientesEmpresa->socioId;
+                $listclientesEmpresas[$cont]['personaNombre'] = $clientesEmpresa->personaNombre;
+                $listclientesEmpresas[$cont]['personaImagen'] = $clientesEmpresa->personaImagen;
+                $listclientesEmpresas[$cont]['numeroDocumentos'] = $clientesEmpresa->numeroDocumentos;
+                $listclientesEmpresas[$cont]['sumaImportesDocumentos'] = $clientesEmpresa->sumaImportesDocumentos;
+                
+                $fechaProrroga = acciones::select('fechaprorroga as accionesFechaProrroga')
+                                            ->where('cliente_id', '=', $clientesEmpresa->clienteId)
+                                            ->latest()
+                                            ->first();
+                if($fechaProrroga){
+                    if($fechaProrroga->accionesFechaProrroga == null){
+                        $fecha = $fechaActual;
+                        $signo = '<';
+                    }else{
+                        $fecha = $fechaProrroga->accionesFechaProrroga;
+                        $signo = '>';
+                    }
+                    
+                    
+                }else{
+                    $fecha = $fechaActual;
+                    $signo = '<';
+                }
+
+
+                
+                $clienteEmpresa = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                                                DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos"))
+
+                                        ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
+                                        ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                        ->leftJoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                                        ->leftJoin('socios as s', 's.id', '=', 'sct.socio_id')
+                                        ->leftJoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                                        ->where('clientes.id', '=', $clientesEmpresa->clienteId)
+                                        ->where('d.fechavencimiento', '<', $fechaActual)
+                                        ->where('d.fechavencimiento', $signo, $fecha )
+                                        ->where('d.saldo', '>' , 0 )
+                                        ->groupBy('clientes.id')
+                                        ->first();
+
+
+                
+
+                $contDocumentosVencidos = 0;
+                if($clienteEmpresa['numeroDocumentosVencidos'] != null){
+                    $contDocumentosVencidos = $clienteEmpresa['numeroDocumentosVencidos'];
+                }
+                $listclientesEmpresas[$cont]['numeroDocumentosVencidos'] = $contDocumentosVencidos;
+
+                $sumaImportesDocumentosVencidos = 0;
+                if($clienteEmpresa['sumaImportesDocumentosVencidos'] != null){
+                    $sumaImportesDocumentosVencidos = $clienteEmpresa['sumaImportesDocumentosVencidos'];
+                }
+                $listclientesEmpresas[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f",$sumaImportesDocumentosVencidos);
+
+
+                $cont = $cont+1;
+            }
+        }
+
+        if (sizeof($clientesEmpresas) > 0){
+            return json_encode(array("code" => true, 
+                                        "result"=>$listclientesEmpresas, 
+                                        "load"=>true));
+        }else{
+            return json_encode(array("code" => false, 
+                                    "load"=>true));
+        }
+    }
+
+    
+    public function filtroMayorSec($idSec)
+    {
+
+        $fechaActual = date('Y-m-d');
+
+        $clientesEmpresas = clientes::select('sct.id as sectorId' ,'clientes.estado as clientesEstado', 
+                                            'clientes.id as clienteId',
+                                            'scts.id as sectoristaId', 'p.nombre as personaNombre', 
+                                            "clientes.imagen as personaImagen", 
+                                            DB::raw('count(d.id) as numeroDocumentos'),
+                                            DB::raw("SUM(d.importe) as sumaImportesDocumentos"))
+
+                                    ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
+                                    ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                    ->leftJoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                                    ->leftJoin('sectoristas as scts', 'scts.id', '=', 'sct.sectorista_id')
+                                    ->leftJoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                                    ->where('clientes.estado', '=', 1)
+                                    ->where('scts.id', '=', $idSec)
+                                    ->where('d.saldo','>',0)
+                                    ->groupBy('clientes.id')
+                                    ->get();
+
+                            
+        
+        if(sizeof($clientesEmpresas) > 0 ){
+
+            $listclientesEmpresas = array(
+                array(
+                    'sectorId' => 0,
+                    'clienteId' => 0,
+                    'socioId' => 0,
+                    'personaNombre' => 0,
+                    'personaImagen' => 0,
+                    'numeroDocumentos' => 0,
+                    'sumaImportesDocumentos' =>0,
+                    'numeroDocumentosVencidos' =>0,
+                    'sumaImportesDocumentosVencidos' => 0,
+                    
+                ),
+                
+            );
+
+
+            $cont = 0;
+            foreach($clientesEmpresas as $clientesEmpresa){
+
+                $listclientesEmpresas[$cont]['sectorId'] = $clientesEmpresa->sectorId;
+                $listclientesEmpresas[$cont]['clienteId'] = $clientesEmpresa->clienteId;
+                $listclientesEmpresas[$cont]['socioId'] = $clientesEmpresa->socioId;
+                $listclientesEmpresas[$cont]['personaNombre'] = $clientesEmpresa->personaNombre;
+                $listclientesEmpresas[$cont]['personaImagen'] = $clientesEmpresa->personaImagen;
+                $listclientesEmpresas[$cont]['numeroDocumentos'] = $clientesEmpresa->numeroDocumentos;
+                $listclientesEmpresas[$cont]['sumaImportesDocumentos'] = $clientesEmpresa->sumaImportesDocumentos;
+                
+                $fechaProrroga = acciones::select('fechaprorroga as accionesFechaProrroga')
+                                            ->where('cliente_id', '=', $clientesEmpresa->clienteId)
+                                            ->latest()
+                                            ->first();
+                if($fechaProrroga){
+                    if($fechaProrroga->accionesFechaProrroga == null){
+                        $fecha = $fechaActual;
+                        $signo = '<';
+                    }else{
+                        $fecha = $fechaProrroga->accionesFechaProrroga;
+                        $signo = '>';
+                    }
+                    
+                    
+                }else{
+                    $fecha = $fechaActual;
+                    $signo = '<';
+                }
+
+
+                
+                $clienteEmpresa = clientes::select(DB::raw('count(d.id) as numeroDocumentosVencidos'),
+                                                DB::raw("SUM(d.importe) as sumaImportesDocumentosVencidos"))
+
+                                        ->leftjoin('users as u', 'u.id', '=', 'clientes.correo_id')
+                                        ->leftjoin('personas as p', 'p.id', '=', 'u.persona_id')
+                                        ->leftJoin('sectores as sct', 'sct.id', '=', 'clientes.sector_id')
+                                        ->leftJoin('socios as s', 's.id', '=', 'sct.socio_id')
+                                        ->leftJoin('documentos as d', 'd.cliente_id', '=', 'clientes.id')
+                                        ->where('clientes.id', '=', $clientesEmpresa->clienteId)
+                                        ->where('d.fechavencimiento', '<', $fechaActual)
+                                        ->where('d.fechavencimiento', $signo, $fecha )
+                                        ->where('d.saldo', '>' , 0 )
+                                        ->groupBy('clientes.id')
+                                        ->first();
+
+
+                
+
+                $contDocumentosVencidos = 0;
+                if($clienteEmpresa['numeroDocumentosVencidos'] != null){
+                    $contDocumentosVencidos = $clienteEmpresa['numeroDocumentosVencidos'];
+                }
+                $listclientesEmpresas[$cont]['numeroDocumentosVencidos'] = $contDocumentosVencidos;
+
+                $sumaImportesDocumentosVencidos = 0;
+                if($clienteEmpresa['sumaImportesDocumentosVencidos'] != null){
+                    $sumaImportesDocumentosVencidos = $clienteEmpresa['sumaImportesDocumentosVencidos'];
+                }
+                $listclientesEmpresas[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f",$sumaImportesDocumentosVencidos);
+
+
+                $cont = $cont+1;
+            }
+        }
+
+        if (sizeof($clientesEmpresas) > 0){
+            return json_encode(array("code" => true, 
+                                        "result"=>$listclientesEmpresas, 
+                                        "load"=>true));
+        }else{
+            return json_encode(array("code" => false, 
+                                    "load"=>true));
+        }
+    }
 
 
 
+    
 
 }
