@@ -81,7 +81,7 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    ILLAPAS
+                    ILLAPA
                 </div>
 
                 <!-- <div class="links">
