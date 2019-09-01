@@ -103,6 +103,13 @@ Route::middleware('auth:api')->get('estadistica/sociosTodos/{empresaid}', 'Apis\
 Route::middleware('auth:api')->get('estadistica/clientesTodos/{socioid}', 'Apis\EstadisticaController@mostrarClientes');
 Route::middleware('auth:api')->get('estadistica/cliente/{clienteid}', 'Apis\EstadisticaController@mostrarCliente');
 
+// FILTRO MAYOR ESTADISTICAS
+        Route::middleware('auth:api')->get('estadistica/empresasTodas/filtroMayor', 'Apis\EstadisticaController@filtroMayorAdm');
+        Route::middleware('auth:api')->get('estadistica/filtroMayor/empresas/{idEmpresa}', 'Apis\EstadisticaController@filtroMayorEmp');
+        Route::middleware('auth:api')->get('estadistica/filtroMayor/socio/{idSocio}', 'Apis\EstadisticaController@filtroMayorSoc');
+        Route::middleware('auth:api')->get('estadistica/filtroMayor/sectorista/{idSectorista}', 'Apis\EstadisticaController@filtroMayorSec');
+        Route::middleware('auth:api')->get('estadistica/filtroMayor/sectorista/sector/{idSector}', 'Apis\EstadisticaController@filtroMayorSecSector');
+
 
 // ESTADISTICAS DE UN GESTOR
 Route::middleware('auth:api')
@@ -131,6 +138,11 @@ Route::middleware('auth:api')->post('dato/editarCliente', 'Apis\DatoController@e
 
 Route::middleware('auth:api')->post('dato/agregarDocumento', 'Apis\DatoController@agregarDocumento');
 Route::middleware('auth:api')->post('dato/agregarPago', 'Apis\DatoController@agregarPago');
+Route::middleware('auth:api')->post('dato/editarPago', 'Apis\DatoController@editarPago');
+Route::middleware('auth:api')->post('dato/editarDocumento', 'Apis\DatoController@editarDocumento');
+Route::middleware('auth:api')->post('dato/eliminarPago', 'Apis\DatoController@eliminarPago');
+
+Route::middleware('auth:api')->post('dato/eliminarDocumento', 'Apis\DatoController@eliminarDocumento');
 
 Route::middleware('auth:api')->get('dato/clientesTodos/{socioid}', 'Apis\DatoController@mostrarClientes');
 Route::middleware('auth:api')->get('dato/clienteDocumentos/{clienteid}', 'Apis\DatoController@mostrarClienteDocumentos');

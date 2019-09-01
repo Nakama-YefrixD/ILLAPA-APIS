@@ -446,4 +446,1014 @@ class EstadisticaController extends Controller
         }
 
     }
+
+    public function filtroMayorAdm()
+    {
+        $fechaActual = date('Y-m-d');
+        $tramosSocio = sectores::select('t.nombre as tramoNombre', 't.inicio as tramoInicio',
+                                            't.fin as tramoFin', 't.estado as tramoEstado')
+                            ->join('tramos as t', 't.socio_id', '=', 'sectores.socio_id')
+                            ->orderBy('t.inicio')
+                            ->get();
+
+        $documentosCliente = documentos::select('documentos.fechavencimiento as documentoFechaVencimieto',
+                                                'documentos.importe as documentoImporte', 
+                                                'documentos.saldo as documentoSaldo' )
+                                        ->get();
+        
+        $listaTramos = array(
+                    array(
+                        'desde' => 0,
+                        'hasta' => 0,
+                        'documentos' => 0,
+                        'importe' => 0,
+                        
+                    ),
+                    
+                );
+
+        $cont = 0;
+        
+
+        foreach($tramosSocio as $tramosSocios){
+            $desde = $tramosSocios->tramoInicio;
+            $hasta = $tramosSocios->tramoFin;
+            $listaTramos[$cont]['desde'] = $desde;
+            $listaTramos[$cont]['hasta'] = $hasta;
+            
+            $numeroDocumentos = 0;
+            $importe = 0;
+            foreach($documentosCliente as $documentosClientes){
+                
+                if($documentosClientes->documentoSaldo <= 0){
+                    
+                }else{
+                    $fechaVencimiento = $documentosClientes->documentoFechaVencimieto;
+                    $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                    if($desde <= $dias && $hasta >= $dias ){
+                        $numeroDocumentos = $numeroDocumentos + 1;
+                        $importe = $importe + $documentosClientes->documentoImporte;
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                    }else{
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                        // $listaTramos[$cont]['importe'] = $interval->days;
+                    }
+                }
+            }
+            $cont = $cont+1;
+        }
+        
+        $cantVencidos = 0;
+        $cantVigentes = 0;
+        $cantPagados = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $cantPagados = $cantPagados+1;
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $cantVencidos = $cantVencidos+1;
+                }else{
+                    $cantVigentes = $cantVigentes+1;
+                }
+            }
+        }
+
+
+        $countDocumentos = documentos::select(DB::raw('count(*) as cantDocumentos'))
+                                        ->first();
+        
+        if($countDocumentos->cantDocumentos > 0){
+            $porcentajeVencido = $cantVencidos*100;
+            $porcentajeVencido = $porcentajeVencido/$countDocumentos->cantDocumentos;
+
+            $porcentajeVigente = $cantVigentes*100;
+            $porcentajeVigente = $porcentajeVigente/$countDocumentos->cantDocumentos;
+
+            $porcentajePagados = $cantPagados*100;
+            $porcentajePagados = $porcentajePagados/$countDocumentos->cantDocumentos;
+
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeVencido),
+                'vigente' => sprintf("%.2f", $porcentajeVigente),
+                'pagado' => sprintf("%.2f", $porcentajePagados),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", $importePagados),
+
+            ];
+        }else{
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", 0),
+
+            ];
+        }
+        
+        $importeVencidos = 0;
+        $importeVigentes = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $importeVencidos = $importeVencidos+$documentosClientess->documentoImporte;
+                }else{
+                    $importeVigentes = $importeVigentes+$documentosClientess->documentoImporte;
+                }
+            }
+        }
+
+        $sumaImportesDocumentos = documentos::select('documentos.id as documentoId')
+                                        ->sum("documentos.importe");
+
+        if($sumaImportesDocumentos > 0){
+            $porcentajeImporteVencido = $importeVencidos*100;
+            $porcentajeImporteVencido = $porcentajeImporteVencido/$sumaImportesDocumentos;
+
+            $porcentajeImporteVigente = $importeVigentes*100;
+            $porcentajeImporteVigente = $porcentajeImporteVigente/$sumaImportesDocumentos;
+
+            $porcentajeImportePagados = $importePagados*100;
+            $porcentajeImportePagados = $porcentajeImportePagados/$sumaImportesDocumentos;
+
+            $porcentajeImporteDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeImporteVencido),
+                'vigente' => sprintf("%.2f", $porcentajeImporteVigente),
+                'pagado' => sprintf("%.2f", $porcentajeImportePagados),
+                'importeVencido' =>sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+            ];
+
+        }else{
+
+            $porcentajeImporteDocumentos = (object) [
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'importeVencido' => sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+                
+            ];
+
+        }
+        
+        if (sizeof($tramosSocio) > 0){
+            return json_encode(array("code" => true, 
+                                        "tramos"=>$listaTramos , 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true,));
+        }else{
+            return json_encode(array("code" => false, 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true  ));
+        }
+
+    }
+
+    public function filtroMayorEmp($empresaid)
+    {
+        $fechaActual = date('Y-m-d');
+
+        $tramosSocio = socios::select('t.nombre as tramoNombre', 't.inicio as tramoInicio',
+                                            't.fin as tramoFin', 't.estado as tramoEstado')
+                            ->join('tramos as t', 't.socio_id', '=', 'socios.id')
+                            ->where('socios.empresa_id', '=', $empresaid)
+                            ->orderBy('t.inicio')
+                            ->get();
+
+        $documentosCliente = documentos::select('documentos.fechavencimiento as documentoFechaVencimieto',
+                                                'documentos.importe as documentoImporte', 
+                                                'documentos.saldo as documentoSaldo' )
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->where('s.empresa_id', '=', $empresaid)
+                                        ->get();
+        
+        $listaTramos = array(
+                    array(
+                        'desde' => 0,
+                        'hasta' => 0,
+                        'documentos' => 0,
+                        'importe' => 0,
+                    ),
+                );
+
+        $cont = 0;
+        
+
+        foreach($tramosSocio as $tramosSocios){
+            $desde = $tramosSocios->tramoInicio;
+            $hasta = $tramosSocios->tramoFin;
+            $listaTramos[$cont]['desde'] = $desde;
+            $listaTramos[$cont]['hasta'] = $hasta;
+            
+            $numeroDocumentos = 0;
+            $importe = 0;
+            foreach($documentosCliente as $documentosClientes){
+                
+                if($documentosClientes->documentoSaldo <= 0){
+                    
+                }else{
+                    $fechaVencimiento = $documentosClientes->documentoFechaVencimieto;
+                    $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                    if($desde <= $dias && $hasta >= $dias ){
+                        $numeroDocumentos = $numeroDocumentos + 1;
+                        $importe = $importe + $documentosClientes->documentoImporte;
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                    }else{
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                        // $listaTramos[$cont]['importe'] = $interval->days;
+                    }
+                }
+            }
+            $cont = $cont+1;
+        }
+        
+        $cantVencidos = 0;
+        $cantVigentes = 0;
+        $cantPagados = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $cantPagados = $cantPagados+1;
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $cantVencidos = $cantVencidos+1;
+                }else{
+                    $cantVigentes = $cantVigentes+1;
+                }
+            }
+        }
+
+
+        $countDocumentos = documentos::select(DB::raw('count(*) as cantDocumentos'))
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->where('s.empresa_id', '=', $empresaid)
+                                        ->first();
+        
+        if($countDocumentos->cantDocumentos > 0){
+            $porcentajeVencido = $cantVencidos*100;
+            $porcentajeVencido = $porcentajeVencido/$countDocumentos->cantDocumentos;
+
+            $porcentajeVigente = $cantVigentes*100;
+            $porcentajeVigente = $porcentajeVigente/$countDocumentos->cantDocumentos;
+
+            $porcentajePagados = $cantPagados*100;
+            $porcentajePagados = $porcentajePagados/$countDocumentos->cantDocumentos;
+
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeVencido),
+                'vigente' => sprintf("%.2f", $porcentajeVigente),
+                'pagado' => sprintf("%.2f", $porcentajePagados),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", $importePagados),
+
+            ];
+        }else{
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", 0),
+
+            ];
+        }
+        
+        $importeVencidos = 0;
+        $importeVigentes = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $importeVencidos = $importeVencidos+$documentosClientess->documentoImporte;
+                }else{
+                    $importeVigentes = $importeVigentes+$documentosClientess->documentoImporte;
+                }
+            }
+        }
+
+        $sumaImportesDocumentos = documentos::select('documentos.id as documentoId')
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->where('s.empresa_id', '=', $empresaid)
+                                        ->sum("documentos.importe");
+
+        if($sumaImportesDocumentos > 0){
+            $porcentajeImporteVencido = $importeVencidos*100;
+            $porcentajeImporteVencido = $porcentajeImporteVencido/$sumaImportesDocumentos;
+
+            $porcentajeImporteVigente = $importeVigentes*100;
+            $porcentajeImporteVigente = $porcentajeImporteVigente/$sumaImportesDocumentos;
+
+            $porcentajeImportePagados = $importePagados*100;
+            $porcentajeImportePagados = $porcentajeImportePagados/$sumaImportesDocumentos;
+
+            $porcentajeImporteDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeImporteVencido),
+                'vigente' => sprintf("%.2f", $porcentajeImporteVigente),
+                'pagado' => sprintf("%.2f", $porcentajeImportePagados),
+                'importeVencido' =>sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+            ];
+
+        }else{
+
+            $porcentajeImporteDocumentos = (object) [
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'importeVencido' => sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+                
+            ];
+
+        }
+        
+        if (sizeof($tramosSocio) > 0){
+            return json_encode(array("code" => true, 
+                                        "tramos"=>$listaTramos , 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true,));
+        }else{
+            return json_encode(array("code" => false, 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true  ));
+        }
+
+    }
+
+    public function filtroMayorSoc($socioid)
+    {
+        $fechaActual = date('Y-m-d');
+
+        $tramosSocio = socios::select('t.nombre as tramoNombre', 't.inicio as tramoInicio',
+                                            't.fin as tramoFin', 't.estado as tramoEstado')
+                            ->join('tramos as t', 't.socio_id', '=', 'socios.id')
+                            ->where('socios.id', '=', $socioid)
+                            ->orderBy('t.inicio')
+                            ->get();
+
+        $documentosCliente = documentos::select('documentos.fechavencimiento as documentoFechaVencimieto',
+                                                'documentos.importe as documentoImporte', 
+                                                'documentos.saldo as documentoSaldo' )
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->where('s.id', '=', $socioid)
+                                        ->get();
+        
+        $listaTramos = array(
+                    array(
+                        'desde' => 0,
+                        'hasta' => 0,
+                        'documentos' => 0,
+                        'importe' => 0,
+                    ),
+                );
+
+        $cont = 0;
+        
+
+        foreach($tramosSocio as $tramosSocios){
+            $desde = $tramosSocios->tramoInicio;
+            $hasta = $tramosSocios->tramoFin;
+            $listaTramos[$cont]['desde'] = $desde;
+            $listaTramos[$cont]['hasta'] = $hasta;
+            
+            $numeroDocumentos = 0;
+            $importe = 0;
+            foreach($documentosCliente as $documentosClientes){
+                
+                if($documentosClientes->documentoSaldo <= 0){
+                    
+                }else{
+                    $fechaVencimiento = $documentosClientes->documentoFechaVencimieto;
+                    $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                    if($desde <= $dias && $hasta >= $dias ){
+                        $numeroDocumentos = $numeroDocumentos + 1;
+                        $importe = $importe + $documentosClientes->documentoImporte;
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                    }else{
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                        // $listaTramos[$cont]['importe'] = $interval->days;
+                    }
+                }
+            }
+            $cont = $cont+1;
+        }
+        
+        $cantVencidos = 0;
+        $cantVigentes = 0;
+        $cantPagados = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $cantPagados = $cantPagados+1;
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $cantVencidos = $cantVencidos+1;
+                }else{
+                    $cantVigentes = $cantVigentes+1;
+                }
+            }
+        }
+
+
+        $countDocumentos = documentos::select(DB::raw('count(*) as cantDocumentos'))
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->where('s.id', '=', $socioid)
+                                        ->first();
+        
+        if($countDocumentos->cantDocumentos > 0){
+            $porcentajeVencido = $cantVencidos*100;
+            $porcentajeVencido = $porcentajeVencido/$countDocumentos->cantDocumentos;
+
+            $porcentajeVigente = $cantVigentes*100;
+            $porcentajeVigente = $porcentajeVigente/$countDocumentos->cantDocumentos;
+
+            $porcentajePagados = $cantPagados*100;
+            $porcentajePagados = $porcentajePagados/$countDocumentos->cantDocumentos;
+
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeVencido),
+                'vigente' => sprintf("%.2f", $porcentajeVigente),
+                'pagado' => sprintf("%.2f", $porcentajePagados),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", $importePagados),
+
+            ];
+        }else{
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", 0),
+
+            ];
+        }
+        
+        $importeVencidos = 0;
+        $importeVigentes = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $importeVencidos = $importeVencidos+$documentosClientess->documentoImporte;
+                }else{
+                    $importeVigentes = $importeVigentes+$documentosClientess->documentoImporte;
+                }
+            }
+        }
+
+        $sumaImportesDocumentos = documentos::select('documentos.id as documentoId')
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->where('s.id', '=', $socioid)
+                                        ->sum("documentos.importe");
+
+        if($sumaImportesDocumentos > 0){
+            $porcentajeImporteVencido = $importeVencidos*100;
+            $porcentajeImporteVencido = $porcentajeImporteVencido/$sumaImportesDocumentos;
+
+            $porcentajeImporteVigente = $importeVigentes*100;
+            $porcentajeImporteVigente = $porcentajeImporteVigente/$sumaImportesDocumentos;
+
+            $porcentajeImportePagados = $importePagados*100;
+            $porcentajeImportePagados = $porcentajeImportePagados/$sumaImportesDocumentos;
+
+            $porcentajeImporteDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeImporteVencido),
+                'vigente' => sprintf("%.2f", $porcentajeImporteVigente),
+                'pagado' => sprintf("%.2f", $porcentajeImportePagados),
+                'importeVencido' =>sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+            ];
+
+        }else{
+
+            $porcentajeImporteDocumentos = (object) [
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'importeVencido' => sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+                
+            ];
+
+        }
+        
+        if (sizeof($tramosSocio) > 0){
+            return json_encode(array("code" => true, 
+                                        "tramos"=>$listaTramos , 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true,));
+        }else{
+            return json_encode(array("code" => false, 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true  ));
+        }
+
+    }
+    
+    public function filtroMayorSec($sectoristaid)
+    {
+        $fechaActual = date('Y-m-d');
+
+        $tramosSocio = socios::select('t.nombre as tramoNombre', 't.inicio as tramoInicio',
+                                            't.fin as tramoFin', 't.estado as tramoEstado')
+                            ->join('tramos as t', 't.socio_id', '=', 'socios.id')
+                            ->join('sectoristas as scts', 'scts.socio_id', '=', 'socios.id')
+                            ->where('scts.id', '=', $sectoristaid)
+                            ->orderBy('t.inicio')
+                            ->get();
+
+        $documentosCliente = documentos::select('documentos.fechavencimiento as documentoFechaVencimieto',
+                                                'documentos.importe as documentoImporte', 
+                                                'documentos.saldo as documentoSaldo' )
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->join('sectoristas as scts', 'scts.socio_id', '=', 's.id')
+                                        ->where('scts.id', '=', $sectoristaid)
+                                        ->get();
+        
+        $listaTramos = array(
+                    array(
+                        'desde' => 0,
+                        'hasta' => 0,
+                        'documentos' => 0,
+                        'importe' => 0,
+                    ),
+                );
+
+        $cont = 0;
+        
+
+        foreach($tramosSocio as $tramosSocios){
+            $desde = $tramosSocios->tramoInicio;
+            $hasta = $tramosSocios->tramoFin;
+            $listaTramos[$cont]['desde'] = $desde;
+            $listaTramos[$cont]['hasta'] = $hasta;
+            
+            $numeroDocumentos = 0;
+            $importe = 0;
+            foreach($documentosCliente as $documentosClientes){
+                
+                if($documentosClientes->documentoSaldo <= 0){
+                    
+                }else{
+                    $fechaVencimiento = $documentosClientes->documentoFechaVencimieto;
+                    $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                    if($desde <= $dias && $hasta >= $dias ){
+                        $numeroDocumentos = $numeroDocumentos + 1;
+                        $importe = $importe + $documentosClientes->documentoImporte;
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                    }else{
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                        // $listaTramos[$cont]['importe'] = $interval->days;
+                    }
+                }
+            }
+            $cont = $cont+1;
+        }
+        
+        $cantVencidos = 0;
+        $cantVigentes = 0;
+        $cantPagados = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $cantPagados = $cantPagados+1;
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $cantVencidos = $cantVencidos+1;
+                }else{
+                    $cantVigentes = $cantVigentes+1;
+                }
+            }
+        }
+
+
+        $countDocumentos = documentos::select(DB::raw('count(*) as cantDocumentos'))
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->join('sectoristas as scts', 'scts.socio_id', '=', 's.id')
+                                        ->where('scts.id', '=', $sectoristaid)
+                                        ->first();
+        
+        if($countDocumentos->cantDocumentos > 0){
+            $porcentajeVencido = $cantVencidos*100;
+            $porcentajeVencido = $porcentajeVencido/$countDocumentos->cantDocumentos;
+
+            $porcentajeVigente = $cantVigentes*100;
+            $porcentajeVigente = $porcentajeVigente/$countDocumentos->cantDocumentos;
+
+            $porcentajePagados = $cantPagados*100;
+            $porcentajePagados = $porcentajePagados/$countDocumentos->cantDocumentos;
+
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeVencido),
+                'vigente' => sprintf("%.2f", $porcentajeVigente),
+                'pagado' => sprintf("%.2f", $porcentajePagados),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", $importePagados),
+
+            ];
+        }else{
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", 0),
+
+            ];
+        }
+        
+        $importeVencidos = 0;
+        $importeVigentes = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $importeVencidos = $importeVencidos+$documentosClientess->documentoImporte;
+                }else{
+                    $importeVigentes = $importeVigentes+$documentosClientess->documentoImporte;
+                }
+            }
+        }
+
+        $sumaImportesDocumentos = documentos::select('documentos.id as documentoId')
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->join('socios    as  s'  , 's.id',   '=',    'sct.socio_id')
+                                        ->join('sectoristas as scts', 'scts.socio_id', '=', 's.id')
+                                        ->where('scts.id', '=', $sectoristaid)
+                                        ->sum("documentos.importe");
+
+        if($sumaImportesDocumentos > 0){
+            $porcentajeImporteVencido = $importeVencidos*100;
+            $porcentajeImporteVencido = $porcentajeImporteVencido/$sumaImportesDocumentos;
+
+            $porcentajeImporteVigente = $importeVigentes*100;
+            $porcentajeImporteVigente = $porcentajeImporteVigente/$sumaImportesDocumentos;
+
+            $porcentajeImportePagados = $importePagados*100;
+            $porcentajeImportePagados = $porcentajeImportePagados/$sumaImportesDocumentos;
+
+            $porcentajeImporteDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeImporteVencido),
+                'vigente' => sprintf("%.2f", $porcentajeImporteVigente),
+                'pagado' => sprintf("%.2f", $porcentajeImportePagados),
+                'importeVencido' =>sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+            ];
+
+        }else{
+
+            $porcentajeImporteDocumentos = (object) [
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'importeVencido' => sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+                
+            ];
+
+        }
+        
+        if (sizeof($tramosSocio) > 0){
+            return json_encode(array("code" => true, 
+                                        "tramos"=>$listaTramos , 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true,));
+        }else{
+            return json_encode(array("code" => false, 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true  ));
+        }
+
+    }
+
+    public function filtroMayorSecSector($sectorid)
+    {
+        $fechaActual = date('Y-m-d');
+
+        $tramosSocio = socios::select('t.nombre as tramoNombre', 't.inicio as tramoInicio',
+                                            't.fin as tramoFin', 't.estado as tramoEstado')
+                            ->join('tramos as t', 't.socio_id', '=', 'socios.id')
+                            ->join('sectores as sct', 'sct.socio_id', '=', 'socios.id')
+                            ->where('sct.id', '=', $sectorid)
+                            ->orderBy('t.inicio')
+                            ->get();
+
+        $documentosCliente = documentos::select('documentos.fechavencimiento as documentoFechaVencimieto',
+                                                'documentos.importe as documentoImporte', 
+                                                'documentos.saldo as documentoSaldo' )
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->where('sct.id', '=', $sectorid)
+                                        ->get();
+        
+        $listaTramos = array(
+                    array(
+                        'desde' => 0,
+                        'hasta' => 0,
+                        'documentos' => 0,
+                        'importe' => 0,
+                    ),
+                );
+
+        $cont = 0;
+        
+
+        foreach($tramosSocio as $tramosSocios){
+            $desde = $tramosSocios->tramoInicio;
+            $hasta = $tramosSocios->tramoFin;
+            $listaTramos[$cont]['desde'] = $desde;
+            $listaTramos[$cont]['hasta'] = $hasta;
+            
+            $numeroDocumentos = 0;
+            $importe = 0;
+            foreach($documentosCliente as $documentosClientes){
+                
+                if($documentosClientes->documentoSaldo <= 0){
+                    
+                }else{
+                    $fechaVencimiento = $documentosClientes->documentoFechaVencimieto;
+                    $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                    if($desde <= $dias && $hasta >= $dias ){
+                        $numeroDocumentos = $numeroDocumentos + 1;
+                        $importe = $importe + $documentosClientes->documentoImporte;
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                    }else{
+                        $listaTramos[$cont]['documentos'] = $numeroDocumentos;
+                        $listaTramos[$cont]['importe'] = $importe;
+                        // $listaTramos[$cont]['importe'] = $interval->days;
+                    }
+                }
+            }
+            $cont = $cont+1;
+        }
+        
+        $cantVencidos = 0;
+        $cantVigentes = 0;
+        $cantPagados = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $cantPagados = $cantPagados+1;
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $cantVencidos = $cantVencidos+1;
+                }else{
+                    $cantVigentes = $cantVigentes+1;
+                }
+            }
+        }
+
+
+        $countDocumentos = documentos::select(DB::raw('count(*) as cantDocumentos'))
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->where('sct.id', '=', $sectorid)
+                                        ->first();
+        
+        if($countDocumentos->cantDocumentos > 0){
+            $porcentajeVencido = $cantVencidos*100;
+            $porcentajeVencido = $porcentajeVencido/$countDocumentos->cantDocumentos;
+
+            $porcentajeVigente = $cantVigentes*100;
+            $porcentajeVigente = $porcentajeVigente/$countDocumentos->cantDocumentos;
+
+            $porcentajePagados = $cantPagados*100;
+            $porcentajePagados = $porcentajePagados/$countDocumentos->cantDocumentos;
+
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeVencido),
+                'vigente' => sprintf("%.2f", $porcentajeVigente),
+                'pagado' => sprintf("%.2f", $porcentajePagados),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", $importePagados),
+
+            ];
+        }else{
+            $porcentajeDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'cantPagados' => sprintf("%.2f", $cantPagados),
+                'cantVigentes' => sprintf("%.2f", $cantVigentes), 
+                'cantVencidos' => sprintf("%.2f", $cantVencidos), 
+                'cantTotal' => sprintf("%.2f", $countDocumentos->cantDocumentos), 
+                'importePagados' => sprintf("%.2f", 0),
+
+            ];
+        }
+        
+        $importeVencidos = 0;
+        $importeVigentes = 0;
+        $importePagados = 0;
+
+        foreach($documentosCliente as $documentosClientess){
+            if($documentosClientess->documentoSaldo <= 0){
+                $importePagados = $importePagados+$documentosClientess->documentoImporte;
+
+            }else{
+                $fechaVencimiento = $documentosClientess->documentoFechaVencimieto;
+                $dias	= (strtotime($fechaActual)-strtotime($fechaVencimiento))/86400;
+                if($dias <= 0){
+                    $importeVencidos = $importeVencidos+$documentosClientess->documentoImporte;
+                }else{
+                    $importeVigentes = $importeVigentes+$documentosClientess->documentoImporte;
+                }
+            }
+        }
+
+        $sumaImportesDocumentos = documentos::select('documentos.id as documentoId')
+                                        ->join('clientes  as  c'  , 'c.id',   '=',    'documentos.cliente_id')
+                                        ->join('sectores  as  sct', 'sct.id', '=',    'c.sector_id')
+                                        ->where('sct.id', '=', $sectorid)
+                                        ->sum("documentos.importe");
+
+        if($sumaImportesDocumentos > 0){
+            $porcentajeImporteVencido = $importeVencidos*100;
+            $porcentajeImporteVencido = $porcentajeImporteVencido/$sumaImportesDocumentos;
+
+            $porcentajeImporteVigente = $importeVigentes*100;
+            $porcentajeImporteVigente = $porcentajeImporteVigente/$sumaImportesDocumentos;
+
+            $porcentajeImportePagados = $importePagados*100;
+            $porcentajeImportePagados = $porcentajeImportePagados/$sumaImportesDocumentos;
+
+            $porcentajeImporteDocumentos = (object) [
+                
+                'vencido' => sprintf("%.2f", $porcentajeImporteVencido),
+                'vigente' => sprintf("%.2f", $porcentajeImporteVigente),
+                'pagado' => sprintf("%.2f", $porcentajeImportePagados),
+                'importeVencido' =>sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+            ];
+
+        }else{
+
+            $porcentajeImporteDocumentos = (object) [
+                'vencido' => sprintf("%.2f", 0),
+                'vigente' => sprintf("%.2f", 0),
+                'pagado' => sprintf("%.2f", 0),
+                'importeVencido' => sprintf("%.2f", $importeVencidos),
+                'importeVigente' => sprintf("%.2f", $importeVigentes),
+                'importePagado' => sprintf("%.2f", $importePagados),
+                'importeTotal' => sprintf("%.2f", $sumaImportesDocumentos),
+                
+            ];
+
+        }
+        
+        if (sizeof($tramosSocio) > 0){
+            return json_encode(array("code" => true, 
+                                        "tramos"=>$listaTramos , 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true,));
+        }else{
+            return json_encode(array("code" => false, 
+                                        "porcentaje"=>$porcentajeDocumentos,
+                                        "porcentajeImportes"=>$porcentajeImporteDocumentos,
+                                        "load"=>true  ));
+        }
+
+    }
 }

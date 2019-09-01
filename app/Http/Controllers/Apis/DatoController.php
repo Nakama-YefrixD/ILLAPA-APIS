@@ -576,6 +576,108 @@ class DatoController extends Controller
 
     }
 
+    public function editarPago(Request $request)
+    {
+        $documentoId        = $request->documentoId;
+        $pagoId             = $request->pagoId;
+        $tipo               = $request->tipoPago;
+        $numero             = $request->numeroPago;
+        $fechaEmision       = $request->emisionPago;
+        $importe            = $request->importePago;
+        $saldoDocumento     = $request->saldoDocumento;
+
+
+        $pago                       = pagos::find($pagoId);
+        $anteriorPago               = $pago->importe;
+
+        $documentoAnterior              = documentos::find($documentoId);
+        $anteriorSaldoDocumento         = $documentoAnterior->saldo;
+        $recuperarSaldoSinPagoDocumento = $anteriorPago + $anteriorSaldoDocumento;
+        $documentoAnterior->saldo       = $recuperarSaldoSinPagoDocumento;
+        $documentoAnterior->update();
+
+        $nuevoSaldoDocumento        = $documentoAnterior->saldo - $importe;
+        $documento                  = documentos::find($documentoId);
+        $documento->saldo           = $nuevoSaldoDocumento;
+        $documento->update();
+
+        $pago                       = pagos::find($pagoId);
+        $pago->tipoPago_id          = $tipo;
+        $pago->numero               = $numero;
+        $pago->importe              = $importe;
+        $pago->fechaemision         = $fechaEmision;
+        $pago->fechavencimiento     = $fechaEmision;
+
+        if($pago->update()){
+            return json_encode(array("code" => true, "load"=>true ));
+        }else{
+            return json_encode(array("code" => false,  "load"=>true ));
+        }
+    }
+
+    public function eliminarPago(Request $request)
+    {
+        $documentoId        = $request->documentoId;
+        $pagoId             = $request->pagoId;
+
+        $pago                       = pagos::find($pagoId);
+        $anteriorPago               = $pago->importe;
+
+        $documentoAnterior              = documentos::find($documentoId);
+        $anteriorSaldoDocumento         = $documentoAnterior->saldo;
+        $recuperarSaldoSinPagoDocumento = $anteriorPago + $anteriorSaldoDocumento;
+        $documentoAnterior->saldo       = $recuperarSaldoSinPagoDocumento;
+        $documentoAnterior->update();
+
+        $pago                       = pagos::find($pagoId);
+        if($pago->delete()){
+            return json_encode(array("code" => true, "load"=>true ));
+        }else{
+            return json_encode(array("code" => false,  "load"=>true ));
+        }
+    }
+
+    public function editarDocumento(Request $request)
+    {
+        $documentoId            = $request->documentoId;
+        $tipoDocumento          = $request->tipoDoc;
+        $numeroDocumento        = $request->numeroDoc;
+        $tipoMoneda             = $request->tipoMonedaDoc;
+        $importeDocumento       = $request->importeDoc;
+        $emisionDocumento       = $request->emisionDoc;
+        $vencimientoDocumento   = $request->vencDoc;
+
+        $documento                      = documentos::find($documentoId);
+        $cantidadPagada                 = $documento->importe - $documento->saldo;
+        $documento->tipoDocumento_id    = $tipoDocumento;
+        $documento->numero              = $numeroDocumento;
+        $documento->fechaemision        = $emisionDocumento;
+        $documento->fechavencimiento    = $vencimientoDocumento;
+        $documento->tipoMoneda_id       = $tipoMoneda;
+        $documento->importe             = $importeDocumento;
+        $documento->saldo               = $importeDocumento - $cantidadPagada;
+
+        if($documento->update()){
+            return json_encode(array("code" => true, "load"=>true ));
+        }else{
+            return json_encode(array("code" => false,  "load"=>true ));
+        }
+    }
+
+    public function eliminarDocumento(Request $request)
+    {
+        $documentoId        = $request->documentoId;
+
+        $pagos = pagos::where('documento_id', $documentoId);
+        $pagos->delete();
+
+        $documento  = documentos::find($documentoId);
+        if($documento->delete()){
+            return json_encode(array("code" => true, "load"=>true ));
+        }else{
+            return json_encode(array("code" => false,  "load"=>true ));
+        }
+    }
 
     public function mostrarClientes($socioId)
     {
@@ -693,9 +795,12 @@ class DatoController extends Controller
                                             ->get();
 
 
-        $documentosCliente = documentos::select('documentos.id as id','td.nombre as tipo', 'documentos.numero as numero',
+        $documentosCliente = documentos::select('documentos.id as id','td.nombre as tipo', 
+                                                'td.id as idTipoDocumento','documentos.numero as numero',
+                                                'documentos.fechaemision as fechaEmision',
                                                 'documentos.fechavencimiento as fechavencimiento',
                                                 'documentos.importe as importe', 'documentos.saldo as saldo',
+                                                'tm.id as idTipoMoneda',
                                                 'tm.nombre as moneda')
                                         ->join('tiposDocumentos as td','td.id', '=', 'documentos.tipoDocumento_id' )
                                         ->join('tiposMonedas as tm','tm.id', '=', 'documentos.tipoMoneda_id' )
@@ -746,12 +851,24 @@ class DatoController extends Controller
                             ->first();
 
 
-        $pagosDocumento = pagos::select('tp.nombre as tipo','pagos.numero as numero', 'pagos.fechavencimiento as fechavencimiento', 'pagos.importe as importe')
+        $pagosDocumento = pagos::select(    'pagos.id as idPago',
+                                            'tp.id as idTipoPago',
+                                            'tp.nombre as tipo',
+                                            'pagos.numero as numero', 
+                                            'pagos.fechavencimiento as fechavencimiento', 
+                                            'pagos.importe as importe')
                                 ->join('tiposPagos as tp', 'tp.id', '=', 'pagos.tipoPago_id')                                
                                 ->where('documento_id', '=', $documentoId)
                                 ->get();  
         
 
+        $tipos = tiposMonedas::select('id','nombre')
+                                ->where('estado', '=', 1)
+                                ->get();
+
+        $tiposDocumentos = tiposDocumentos::select('id','nombre')
+                                            ->where('estado', '=', 1)
+                                            ->get();
         if (sizeof($pagosDocumento) > 0){
 
             return json_encode(array("code" => true, 
@@ -759,6 +876,8 @@ class DatoController extends Controller
                                     "tipoPagos" => $tiposPagos,
                                     "cliente"=>$clienteDocumento, 
                                     "documento"=>$documentoCliente,
+                                    "tipos"=>$tipos , 
+                                    "tiposDocumentos"=>$tiposDocumentos,
                                     "load"=>true ));
         }else{
 
@@ -766,6 +885,8 @@ class DatoController extends Controller
                                     "cliente"=>$clienteDocumento,
                                     "tipoPagos" => $tiposPagos,
                                     "documento"=>$documentoCliente, 
+                                    "tipos"=>$tipos , 
+                                    "tiposDocumentos"=>$tiposDocumentos,
                                     "load"=>true));
         }
         

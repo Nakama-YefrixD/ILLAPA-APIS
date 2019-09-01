@@ -20,10 +20,12 @@ class estadisticasFreeController extends Controller
                                                 "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "sectoristas.correo_id as sectoristaCorreo", 
                                             "p.nombre as personaNombre", 
-                                            "p.imagen as personaImagen")
+                                            "p.imagen as personaImagen",
+                                            "sct.id as sectorId")
                             ->join('users as u', 'u.id', '=', 'sectoristas.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
                             ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                            ->join('sectores as sct', 'sct.sectorista_id', '=', 'sectoristas.id')
                             ->where('sectoristas.id', '=', $sectoristaId)
                             ->first();
 

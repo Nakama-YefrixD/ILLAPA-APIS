@@ -26,7 +26,8 @@ class gestorEmpresasController extends Controller
                                                 "p.numeroidentificacion as personaNumeroIdentificacion",
                                             "gestores.correo_id as gestorCorreo", 
                                             "p.nombre as personaNombre", 
-                                            "p.imagen as personaImagen")
+                                            "p.imagen as personaImagen",
+                                            "gestores.sector_id as sectorId")
                             ->join('users as u', 'u.id', '=', 'gestores.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
                             ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
