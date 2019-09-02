@@ -189,6 +189,10 @@ Route::middleware('auth:api')->post('usuario/socio/eliminarSector', 'Apis\Usuari
 Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}/{socioid}', 'Apis\UsuarioController@mostrarSectoresSectorista');
 
 Route::middleware('auth:api')->get('usuario/datoSocioEmpresaSectores/{socioid}', 'Apis\UsuarioController@mostrarSocioEmpresaSectores');
+Route::middleware('auth:api')->get('usuario/datoSocioEmpresaSectores/gestor/{socioid}/{gestorId}', 'Apis\UsuarioController@mostrarSocioEmpresaSectorGestor');
+Route::middleware('auth:api')->get('usuario/datoSocioEmpresaSectores/sectorista/{socioid}/{sectoristaId}', 'Apis\UsuarioController@mostrarSocioEmpresaSectoresSectorista');
+Route::middleware('auth:api')->get('usuario/degradar/gestor/{socioid}/{gestorId}', 'Apis\UsuarioController@degradarGestor');
+Route::middleware('auth:api')->get('usuario/degradar/sectorista/{socioid}/{sectoristaId}', 'Apis\UsuarioController@degradarSectorista');
 
 Route::middleware('auth:api')->post('usuario/usuarioValidar', 'Apis\UsuarioController@validarCorreo');
 

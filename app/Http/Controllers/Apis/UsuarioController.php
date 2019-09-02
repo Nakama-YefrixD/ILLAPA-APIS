@@ -147,21 +147,35 @@ class UsuarioController extends Controller
         $gestor->estado = 0;
         $gestor->update();
 
-        $gestor = new gestores;
-        $gestor->sector_id = $idSector;
-        $gestor->correo_id = $sectorista->correo_id;
-        $gestor->estado = 1;
-
         $sectorUpdate = sectores::where('id', '=', $idSector)->first();
         $sectorUpdate->estGestor = 1;
         $sectorUpdate->update();
 
-        if($gestor->save()){
-            return json_encode(true);
-        }else{
-            return json_encode(false);
-        }
+        $gestorExis = gestores::where('correo_id', $sectorista->correo_id)
+                                ->where('estado', 0)
+                                ->first();
+        if($gestorExis){
+            $gestor             = gestores::find($gestorExis->id);
+            $gestor->sector_id  = $idSector;
+            $gestor->estado     = 1;
+        
+            if($gestor->update()){
+                return json_encode(true);
+            }else{
+                return json_encode(false);
+            }
 
+        }else{
+            $gestor = new gestores;
+            $gestor->sector_id = $idSector;
+            $gestor->correo_id = $sectorista->correo_id;
+            $gestor->estado = 1;
+            if($gestor->save()){
+                return json_encode(true);
+            }else{
+                return json_encode(false);
+            }
+        }
     }
 
 
@@ -351,6 +365,7 @@ class UsuarioController extends Controller
                             ->join('users as u', 'u.id', '=', 'scts.correo_id')
                             ->join('personas as p', 'p.id', '=', 'u.persona_id')
                             ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                            ->where('scts.estado', '=', 1)
                             ->where('socios.id', '=', $socioId)
                             ->get();
 
@@ -371,6 +386,7 @@ class UsuarioController extends Controller
                                 ->join('users as u', 'u.id', '=', 'g.correo_id')
                                 ->join('personas as p', 'p.id', '=', 'u.persona_id')
                                 ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                ->where('g.estado', '=', 1)
                                 ->where('socios.id', '=', $socioId)
                                 ->get();
 
@@ -552,14 +568,217 @@ class UsuarioController extends Controller
                                 ->where('empresas.id', '=', $socioEmpresa->empresaId)
                                 ->first();
         
-        $sectores = sectores::where('socio_id', '=', $socioId)->get();
+        
+        $sectores = sectores::select(   
+                                    'sectores.id as id', 
+                                    'scts.id as idSectorista',
+                                    'g.id as idGestor',
+                                    'sectores.descripcion',
+                                    'sectores.estado',
+                                    'sectores.estSectorista',
+                                    'sectores.estGestor'
+                                    )
+                            ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sectores.id')
+                            ->leftjoin('gestores as g', 'g.sector_id', '=', 'sectores.id')
+                            ->where('sectores.socio_id', '=', $socioId)
+                            ->get();
 
-        return json_encode(array("code" => true, "socio"=>$socioEmpresa, "empresa"=>$empresa ,"load"=>true, "sectores"=>$sectores   ));
+        return json_encode(array("code" => true, 
+                                    "socio"=>$socioEmpresa, 
+                                    "empresa"=>$empresa ,
+                                    "load"=>true, 
+                                    "sectores"=>$sectores   ));
+    }
+
+
+    public function mostrarSocioEmpresaSectorGestor($socioId, $gestorId)
+    {
+        $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
+                                            "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion", 
+                                            "p.numeroidentificacion as personaNumeroIdentificacion",
+                                            "socios.estado as socioEstado", "p.nombre as personaNombre", 
+                                            "p.imagen as personaImagen")
+                                ->join('users as u', 'u.id', '=', 'socios.correo_id')
+                                ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                ->where('socios.id', '=', $socioId)
+                                ->first();
+
+        $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
+                                            "empresas.id as empresaId",
+                                            "tdi.nombre as personaTipoIdentificacion", 
+                                            "p.numeroidentificacion as personaNumeroIdentificacion",
+                                            "p.imagen as personaImagen")
+                                ->join('users as u', 'u.id', '=', 'empresas.correo_id')
+                                ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                ->where('empresas.id', '=', $socioEmpresa->empresaId)
+                                ->first();
+        
+        
+        $sectores = sectores::select(   
+                                    'sectores.id as id', 
+                                    'scts.id as idSectorista',
+                                    'g.id as idGestor',
+                                    'sectores.descripcion',
+                                    'sectores.estado',
+                                    'sectores.estSectorista',
+                                    'sectores.estGestor'
+                                    )
+                            ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sectores.id')
+                            ->leftjoin('gestores as g', 'g.sector_id', '=', 'sectores.id')
+                            ->where('sectores.socio_id', '=', $socioId)
+                            ->get();
+
+        $sectorGestor = sectores::join('gestores as g', 'g.sector_id', '=', 'sectores.id')
+                                ->where('sectores.socio_id', $socioId)                    
+                                ->where('sectores.estado', 1)
+                                ->where('g.id', $gestorId)
+                                ->first();
+
+        return json_encode(array("code" => true, 
+                                    "socio"=>$socioEmpresa, 
+                                    "empresa"=>$empresa ,
+                                    "load"=>true, 
+                                    "sectores"=>$sectores,
+                                    "sectorGestor" => $sectorGestor
+                                ));
+    }
+
+    public function mostrarSocioEmpresaSectoresSectorista($socioId, $sectoristaId)
+    {
+        $socioEmpresa = socios::select("socios.id as socioId", "socios.empresa_id as empresaId",
+                                            "u.email as userEmail", "tdi.nombre as personaTipoIdentificacion", 
+                                            "p.numeroidentificacion as personaNumeroIdentificacion",
+                                            "socios.estado as socioEstado", "p.nombre as personaNombre", 
+                                            "p.imagen as personaImagen")
+                                ->join('users as u', 'u.id', '=', 'socios.correo_id')
+                                ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                ->where('socios.id', '=', $socioId)
+                                ->first();
+
+        $empresa = empresas::select("empresas.nombre as empresaNombre", "u.email as userEmail", 
+                                            "empresas.id as empresaId",
+                                            "tdi.nombre as personaTipoIdentificacion", 
+                                            "p.numeroidentificacion as personaNumeroIdentificacion",
+                                            "p.imagen as personaImagen")
+                                ->join('users as u', 'u.id', '=', 'empresas.correo_id')
+                                ->join('personas as p', 'p.id', '=', 'u.persona_id')
+                                ->join('tiposDocumentosIdentidad as tdi', 'tdi.id', '=', 'p.tipoDocumentoIdentidad_id')
+                                ->where('empresas.id', '=', $socioEmpresa->empresaId)
+                                ->first();
+        
+        
+        $sectores = sectores::select(   
+                                    'sectores.id as id', 
+                                    'scts.id as idSectorista',
+                                    'g.id as idGestor',
+                                    'sectores.descripcion',
+                                    'sectores.estado',
+                                    'sectores.estSectorista',
+                                    'sectores.estGestor'
+                                    )
+                            ->leftjoin('sectoristas as scts', 'scts.id', '=', 'sectores.id')
+                            ->leftjoin('gestores as g', 'g.sector_id', '=', 'sectores.id')
+                            ->where('sectores.socio_id', '=', $socioId)
+                            ->get();
+
+        $sectoresSectorista = sectores::where('sectores.socio_id', $socioId)                    
+                                        ->where('sectores.estado', 1)
+                                        ->where('sectores.sectorista_id', $sectoristaId)
+                                        ->first();
+
+        return json_encode(array("code" => true, 
+                                    "socio"=>$socioEmpresa, 
+                                    "empresa"=>$empresa ,
+                                    "load"=>true, 
+                                    "sectores"=>$sectores,
+                                    "sectoresSectorista" => $sectoresSectorista
+                                ));
+    }
+
+    public function degradarGestor($idSocio, $idGestor)
+    {
+
+        $gestor = gestores::where('id', $idGestor)
+                            ->first();
+        
+        $sectorista = sectoristas::where('correo_id', $gestor->correo_id)
+                                    ->where('estado', 0)
+                                    ->where('socio_id', 1)
+                                    ->first();
+
+        $sectorista = sectoristas::find($sectorista->id);
+        $sectorista->estado = 1;
+        $sectorista->update();
+
+        $sector = sectores::where('sectorista_id', '=', $sectorista->id)
+                            ->first();
+        $sector->estado = 1;
+        $sector->update();
+
+        $gestor = gestores::where('sector_id', '=', $sector->id)
+                            ->first();
+        $gestor->estado = 1;
+        $gestor->update();
+
+        $gestor             = gestores::find($idGestor);
+        $gestor->estado     = 0;
+
+        $sectorUpdate = sectores::where('id', '=', $gestor->sector_id)
+                                ->first();
+        $sectorUpdate->estGestor = 0;
+        $sectorUpdate->update();
+
+        if($gestor->save()){
+            return json_encode(true);
+        }else{
+            return json_encode(false);
+        }
+    }
     
-        
+    public function degradarSectorista($idSocio, $idSectorista)
+    {
 
-        
+        $sectoristaSeleccionado = sectoristas::find($idSectorista);
 
+        $sectorista = sectoristas::where('estado', 0)
+                                ->where('socio_id', 1)
+                                ->where('correo_id', $sectoristaSeleccionado->correo_id)
+                                ->first();
+        
+        $sectorista->estado = 1;
+        $sectorista->update();
+
+        $sector = sectores::where('sectorista_id', '=', $sectorista->id )
+                            ->first();
+        $sector->estado = 1;
+        $sector->update();
+
+        $gestor = gestores::where('sector_id', '=', $sector->id)
+                            ->first();
+        $gestor->estado = 1;
+        $gestor->update();
+
+        $sectoristaSeleccionado->estado = 0;
+        if($sectoristaSeleccionado->update()){
+            
+            $sectores = sectores::where('sectorista_id', $idSectorista)
+                                ->get();
+
+            foreach($sectores as $sector){
+                $sectorSelect = sectores::find($sector->id);
+                $sectorSelect->estSectorista = 0;
+                $sectorSelect->sectorista_id = null;
+                $sectorSelect->update();
+            }
+
+            return json_encode(true);
+        }else{
+            return json_encode(false);
+        }
+        
     }
 
 }

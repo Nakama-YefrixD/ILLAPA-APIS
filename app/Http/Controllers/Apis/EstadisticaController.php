@@ -9,6 +9,7 @@ use App\socios;
 use App\clientes;
 use App\sectores;
 use App\documentos;
+use App\tramos;
 use DB;
 
 class EstadisticaController extends Controller
@@ -450,10 +451,10 @@ class EstadisticaController extends Controller
     public function filtroMayorAdm()
     {
         $fechaActual = date('Y-m-d');
-        $tramosSocio = sectores::select('t.nombre as tramoNombre', 't.inicio as tramoInicio',
-                                            't.fin as tramoFin', 't.estado as tramoEstado')
-                            ->join('tramos as t', 't.socio_id', '=', 'sectores.socio_id')
-                            ->orderBy('t.inicio')
+        $tramosSocio = tramos::select('tramos.nombre as tramoNombre', 'tramos.inicio as tramoInicio',
+                                            'tramos.fin as tramoFin', 'tramos.estado as tramoEstado')
+                            ->where('tramos.socio_id', 1)
+                            ->orderBy('tramos.inicio')
                             ->get();
 
         $documentosCliente = documentos::select('documentos.fechavencimiento as documentoFechaVencimieto',
