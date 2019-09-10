@@ -46,7 +46,7 @@ class importarController extends Controller
     {   
         
         
-        $archivo = "ExamplesImportacion/D".$nombreExcel.".xlsx";
+        $archivo = "/ExamplesImportacion/D".$nombreExcel.".xlsx";
         $objPHPExcel = IOFactory::load($archivo);
         $objPHPExcel->setActiveSheetIndex(0);
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
@@ -88,7 +88,7 @@ class importarController extends Controller
 
     public function ejemplosimportardescargar($nombreExcel)
     {
-        $file= public_path(). "\ExamplesImportacion\D".$nombreExcel.".xlsx";
+        $file= public_path(). "/ExamplesImportacion/D".$nombreExcel.".xlsx";
         $headers = array(
             'Content-Type: application/xlsx',
             );
