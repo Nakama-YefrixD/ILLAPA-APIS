@@ -182,9 +182,22 @@ Route::middleware('auth:api')->get('usuario/usuariosTodos/{socioid}', 'Apis\Usua
 Route::middleware('auth:api')->get('usuario/gestor/sector/{gestorid}/{socioid}', 'Apis\UsuarioController@mostrarSectorGestor');
 Route::middleware('auth:api')->get('usuario/socio/sectores/{socioid}', 'Apis\UsuarioController@mostrarSectoresSocio');
 
-Route::middleware('auth:api')->post('usuario/gestor/eliminarSector', 'Apis\UsuarioController@eliminarSectorGestor');
-Route::middleware('auth:api')->post('usuario/sectorista/eliminarSector', 'Apis\UsuarioController@eliminarSectorSectorista');
+// Eliminar sector a un usuario
+
+Route::middleware('auth:api')->post('usuario/sectorista/revocarSector', 'Apis\UsuarioController@revocarSectorSectorista');
 Route::middleware('auth:api')->post('usuario/socio/eliminarSector', 'Apis\UsuarioController@eliminarSectorSocio');
+
+// Editar sector a un usuario
+Route::middleware('auth:api')->post('usuario/sectorista/editarSector', 'Apis\UsuarioController@editarSectorSectorista');
+Route::middleware('auth:api')->post('usuario/gestor/editarSector', 'Apis\UsuarioController@editarSectorGestor');
+
+// Añadir un sector a un usuario
+Route::middleware('auth:api')->post('usuario/sectorista/anadirSector', 'Apis\UsuarioController@anadirSectorSectorista');
+
+// Editar usuario
+Route::middleware('auth:api')->post('usuario/sectorista/editarUsuario', 'Apis\UsuarioController@editarSectorista');
+Route::middleware('auth:api')->post('usuario/gestor/editarUsuario', 'Apis\UsuarioController@editarGestor');
+
 
 Route::middleware('auth:api')->get('usuario/sectorista/sector/{sectoristaid}/{socioid}', 'Apis\UsuarioController@mostrarSectoresSectorista');
 

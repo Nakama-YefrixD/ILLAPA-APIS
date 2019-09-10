@@ -151,8 +151,11 @@ class UsuarioController extends Controller
         $sectorUpdate->estGestor = 1;
         $sectorUpdate->update();
 
-        $gestorExis = gestores::where('correo_id', $sectorista->correo_id)
-                                ->where('estado', 0)
+        $gestorExis = gestores::join('sectores as sct', 'sct.id', '=', 'gestores.sector_id')
+                                ->where('gestores.correo_id', $sectorista->correo_id)
+                                ->where('gestores.estado', 0)
+                                ->where('sct.estado', '=', 1)
+                                ->where('sct.socio_id', '!=', 1)
                                 ->first();
         if($gestorExis){
             $gestor             = gestores::find($gestorExis->id);
@@ -178,9 +181,6 @@ class UsuarioController extends Controller
         }
     }
 
-
-
-
     public function agregarSectorista(Request $request)
     {
         $idSocio = $request->idSocio;
@@ -199,32 +199,56 @@ class UsuarioController extends Controller
         $gestor->estado = 0;
         $gestor->update();
 
-        $sectoristaNuevo = new sectoristas;
-        $sectoristaNuevo->socio_id = $idSocio;
-        $sectoristaNuevo->correo_id = $sectorista->correo_id;
-        $sectoristaNuevo->estado = 1;
 
+        $sectoristaExis = sectoristas::where('correo_id', $sectorista->correo_id)
+                                        ->where('estado', 0)
+                                        ->where('socio_id', $idSocio)
+                                        ->first();
         
+        if($sectoristaExis){
+            $sectoristaNuevo = sectoristas::find($sectoristaExis->id);
+            $sectoristaNuevo->estado = 1;
 
-        if($sectoristaNuevo->save()){
-            
-            $sectores = explode("-", $idsSectores);
-            $longSectores = sizeof($sectores);
-            for($x = 1; $x <= $longSectores; $x++){
+            if($sectoristaNuevo->update()){
                 
-                $sectorUpdate = sectores::where('id', '=', $sectores[$x])->first();
-                $sectorUpdate->estSectorista = 1;
-                $sectorUpdate->sectorista_id = $sectoristaNuevo->id;
-                $sectorUpdate->update();
+                $sectores = explode("-", $idsSectores);
+                $longSectores = sizeof($sectores);
+                for($x = 1; $x <= $longSectores; $x++){
+                    
+                    $sectorUpdate = sectores::where('id', '=', $sectores[$x])->first();
+                    $sectorUpdate->estSectorista = 1;
+                    $sectorUpdate->sectorista_id = $sectoristaNuevo->id;
+                    $sectorUpdate->update();
+                }
 
-
+                return json_encode(true);
+            }else{
+                return json_encode(false);
             }
-            
-
-            return json_encode(true);
         }else{
-            return json_encode(false);
+            $sectoristaNuevo = new sectoristas;
+            $sectoristaNuevo->socio_id = $idSocio;
+            $sectoristaNuevo->correo_id = $sectorista->correo_id;
+            $sectoristaNuevo->estado = 1;
+
+            if($sectoristaNuevo->save()){
+                
+                $sectores = explode("-", $idsSectores);
+                $longSectores = sizeof($sectores);
+                for($x = 1; $x <= $longSectores; $x++){
+                    
+                    $sectorUpdate = sectores::where('id', '=', $sectores[$x])->first();
+                    $sectorUpdate->estSectorista = 1;
+                    $sectorUpdate->sectorista_id = $sectoristaNuevo->id;
+                    $sectorUpdate->update();
+                }
+
+                return json_encode(true);
+            }else{
+                return json_encode(false);
+            }
         }
+        
 
     }
 
@@ -464,14 +488,16 @@ class UsuarioController extends Controller
                                     ->get();
 
         if (sizeof($sectoristaSectores) > 0 ){
-            return json_encode(array("code" => true, "sectores"=>$sectoresSocio, "sectoresSeleccionados"=>$sectoristaSectores ,"load"=>true  ));
+            return json_encode(array("code" => true, "sectores"=>$sectoresSocio, "sectoresSeleccionados"=>$sectoristaSectores ,"load"=>true ,"siSectores" => false ));
+        }elseif(sizeof($sectoresSocio) > 0){
+            return json_encode(array("code" => false,  "load"=>true, "sectores"=>$sectoresSocio, "siSectores" => true));
         }else{
-            return json_encode(array("code" => false,  "load"=>true));
+            return json_encode(array("code" => false,  "load"=>true, "siSectores" => false));
         }
 
     }
 
-    public function eliminarSectorGestor(Request $request)
+    public function editarSectorGestor(Request $request)
     {
         $idGestor = $request->idUsuario;
         $idSectorAntiguo = $request->idsectorAntiguo;
@@ -496,7 +522,7 @@ class UsuarioController extends Controller
         }
     }
 
-    public function eliminarSectorSectorista(Request $request)
+    public function editarSectorSectorista(Request $request)
     {
         $idSectorista = $request->idUsuario;
         $idSectorAntiguo = $request->idsectorAntiguo;
@@ -517,10 +543,147 @@ class UsuarioController extends Controller
         }else{
             return json_encode(array("code" => false, "load"=>true));
         }
+    }
+
+    public function anadirSectorSectorista(Request $request)
+    {
+        $idSectorista = $request->idUsuario;
+        $idSectorNuevo = $request->idsectorNuevo;
+        $idSocio= $request->idsocio;
+        
+        $sectorNuevo = sectores::find($idSectorNuevo);
+        $sectorNuevo->sectorista_id = $idSectorista;
+        $sectorNuevo->estSectorista = 1;
+
+        if( $sectorNuevo->update()){
+            return json_encode(array("code" => true,  "load"=>true));
+        }else{
+            return json_encode(array("code" => false, "load"=>true));
+        }
 
 
     }
 
+    public function revocarSectorSectorista(Request $request)
+    {
+        $idSectorista = $request->idUsuario;
+        $idSectorAntiguo = $request->idsectorAntiguo;
+        $idSocio= $request->idsocio;
+        
+        $sectorAntiguo = sectores::find($idSectorAntiguo);
+        $sectorAntiguo->sectorista_id = null;
+        $sectorAntiguo->estSectorista = 0;
+
+        if( $sectorAntiguo->update()){
+            return json_encode(array("code" => true,  "load"=>true));
+        }else{
+            return json_encode(array("code" => false, "load"=>true));
+        }
+    }
+
+    public function editarSectorista(Request $request)
+    {
+        $idSectorista   = $request->idUsuario;
+        $idSocio        = $request->idsocio;
+
+        $sectoresAntiguos = sectores::where('sectorista_id', $idSectorista)->get();
+        foreach($sectoresAntiguos as $sectorAntiguo){
+            $sectoresAntiguo  = sectores::find($sectorAntiguo->id);
+            $sectoresAntiguo->sectorista_id = null;
+            $sectoresAntiguo->estSectorista = 0;
+            $sectoresAntiguo->update();
+        }
+        
+
+        $sectorista  = sectoristas::find($idSectorista);
+        $sectoristaCorreo_id = $sectorista->correo_id;
+        $sectorista->delete();
+
+        $sectorSinGestor = sectores::where('estGestor', '=', 0)
+                                    ->first();
+
+        $sectorUpdate = sectores::where('id', '=', $sectorSinGestor->id)->first();
+        $sectorUpdate->estGestor = 1;
+        $sectorUpdate->update();
+
+        $gestorExis = gestores::join('sectores as sct', 'sct.id', '=', 'gestores.sector_id')
+                                ->where('gestores.correo_id', $sectoristaCorreo_id)
+                                ->where('gestores.estado', 0)
+                                ->where('sct.estado', '=', 1)
+                                ->where('sct.socio_id', '!=', 1)
+                                ->first();
+        if($gestorExis){
+            $gestor             = gestores::find($gestorExis->id);
+            $gestor->sector_id  = $sectorSinGestor->id;
+            $gestor->estado     = 1;
+        
+            if($gestor->update()){
+                return json_encode(array("code" => true, 
+                                    "load"=>true));
+            }else{
+                return json_encode(array("code" => false, 
+                                    "load"=>true));
+            }
+
+        }else{
+            $gestor = new gestores;
+            $gestor->sector_id = $sectorSinGestor->id;
+            $gestor->correo_id = $sectoristaCorreo_id;
+            $gestor->estado = 1;
+            if($gestor->save()){
+                return json_encode(array("code" => true, 
+                                    "load"=>true));
+            }else{
+                return json_encode(array("code" => false, 
+                                    "load"=>true));
+            }
+        }
+    }
+
+    public function editarGestor(Request $request)
+    {
+        $idGestor   = $request->idUsuario;
+        $idSocio    = $request->idsocio;
+
+        $gestor          = gestores::find($idGestor);
+        $gestorCorreo_id = $gestor->correo_id;
+        $gestorSector_id = $gestor->sector_id;
+        $gestor->delete();
+
+        $sectorUpdate = sectores::where('id', '=', $gestorSector_id)->first();
+        $sectorUpdate->estGestor = 0;
+        $sectorUpdate->update();
+
+        $sectoristaExis = sectoristas::where('correo_id', $gestorCorreo_id)
+                                        ->where('estado', 0)
+                                        ->where('socio_id', $idSocio)
+                                        ->first();
+        if($sectoristaExis){
+            $sectorista = sectoristas::find($sectoristaExis->id);
+            $sectorista->estado = 1;
+            if($sectorista->update()){
+                return json_encode(array("code" => true, 
+                                    "load"=>true));
+            }else{
+                return json_encode(array("code" => false, 
+                                    "load"=>true));
+            }
+            
+
+        }else{
+            $sectorista = new sectoristas;
+            $sectorista->socio_id = $idSocio;
+            $sectorista->correo_id = $gestorCorreo_id;
+            $sectorista->estado = 1;
+            if($sectorista->save()){
+                return json_encode(array("code" => true, 
+                                    "load"=>true));
+            }else{
+                return json_encode(array("code" => false, 
+                                    "load"=>true));
+            }
+        }
+    }
 
     public function eliminarSectorSocio(Request $request)
     {
@@ -740,14 +903,14 @@ class UsuarioController extends Controller
     
     public function degradarSectorista($idSocio, $idSectorista)
     {
-
         $sectoristaSeleccionado = sectoristas::find($idSectorista);
 
         $sectorista = sectoristas::where('estado', 0)
                                 ->where('socio_id', 1)
                                 ->where('correo_id', $sectoristaSeleccionado->correo_id)
                                 ->first();
-        
+                                
+        $sectorista = sectoristas::find($sectorista->id);
         $sectorista->estado = 1;
         $sectorista->update();
 
