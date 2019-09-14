@@ -25,35 +25,35 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 
 
-Route::get('/ejemplos', 'importarController@ejemplosImportar')
+Route::get('/ejemplos', 'importarSocioController@ejemplosImportar')
         ->name('importar.ejemplos');
 
-Route::get('/ejemplos/mostrar/{nombreExcel}', 'importarController@ejemplosimportarmostrar')
+Route::get('/ejemplos/mostrar/{nombreExcel}', 'importarSocioController@ejemplosimportarmostrar')
         ->name('importar.mostrar');
 
-Route::get('/ejemplos/descargar/{nombreExcel}', 'importarController@ejemplosimportardescargar')
+Route::get('/ejemplos/descargar/{nombreExcel}', 'importarSocioController@ejemplosimportardescargar')
         ->name('importar.descargar');
  
-Route::get('/importar/datos', 'importarController@datos')
+Route::get('/importar/datos', 'importarSocioController@datos')
         ->name('importar.datos'); 
 
-Route::post('/importar/mostrarExcel', 'importarController@mostrarExcel')
+Route::post('/importar/mostrarExcel', 'importarSocioController@mostrarExcel')
         ->name('importar.mostrarExcel');
 
-Route::post('/importar/clientes', 'importarController@importarClientes')
+Route::post('/importar/clientes', 'importarSocioController@importarClientes')
         ->name('importar.importarClientes');
 
-Route::post('/importar/correos', 'importarController@importarCorreos')
+Route::post('/importar/correos', 'importarSocioController@importarCorreos')
         ->name('importar.importarCorreos');
 
-Route::post('/importar/telefonos', 'importarController@importarTelefonos')
+Route::post('/importar/telefonos', 'importarSocioController@importarTelefonos')
         ->name('importar.importarTelefonos');
 
-Route::post('/importar/direcciones', 'importarController@importarDirecciones')
+Route::post('/importar/direcciones', 'importarSocioController@importarDirecciones')
         ->name('importar.importarDirecciones');
 
-Route::post('/importar/documentos', 'importarController@importarDocumentos')
+Route::post('/importar/documentos', 'importarSocioController@importarDocumentos')
         ->name('importar.importarDocumentos');
 
-Route::post('/importar/pagos', 'importarController@importarPagos')
+Route::post('/importar/pagos', 'importarSocioController@importarPagos')
         ->name('importar.importarPagos');
