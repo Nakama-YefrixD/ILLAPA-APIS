@@ -370,7 +370,7 @@ class GestionController extends Controller
                             ->where('s.id', '=', $socioId)
                             ->where('d.saldo','>',0)
                             ->groupBy('clientes.id')
-                            ->get();
+                            ->paginate(10);
 
                             
         
