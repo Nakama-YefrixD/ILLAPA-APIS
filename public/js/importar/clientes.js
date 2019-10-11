@@ -1,9 +1,5 @@
 $(document).ready(function() {
     // var URLactual = window.location.href;
-
-    
-
-
     $("#subirLista").on("change", function() {
         event.preventDefault();
         var formData = new FormData($("#insertarExcel")[0]);
@@ -39,8 +35,6 @@ $(document).ready(function() {
                 })
             }
         });
-
-        
     });
 
 

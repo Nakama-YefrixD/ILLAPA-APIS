@@ -18,6 +18,9 @@ use Peru\Http\ContextClient;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MensajeEnviado;
+
 class RegisterController extends Controller
 {
     public function registrarget($dni, $email, $pass)
@@ -137,6 +140,13 @@ class RegisterController extends Controller
 
         $apitoken = $user->api_token;
         
+        $data = array(
+            'token'     => $apitoken,
+            "ruta"      => "confirmar",
+            'titulo'    => "Confirmar Correo",
+            "contenido" => "Hola ! Este correo fue enviado con el proposito de confirmar su registro en nuestra aplicacion móvil 'ILLAPA'",
+        );
+        Mail::to($email)->send(new MensajeEnviado($data));
 
         return json_encode($apitoken);
 

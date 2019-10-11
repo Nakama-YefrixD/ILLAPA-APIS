@@ -16,7 +16,20 @@ Route::get('/', function () {
 });
 
 
+Route::get('/prueba', 'mensajesController@mensaje')
+        ->name('mensaje');
 
+Route::get('/confirmar/{token}', 'mensajesController@confirmar')
+        ->name('confirmar');
+
+Route::get('/recuperar/email/{email}', 'Apis\Auth\recuperarContrasenaController@enviarMensajeRecuperacion')
+        ->name('recuperar.mensaje');
+
+Route::get('/recuperar/{token}', 'Apis\Auth\recuperarContrasenaController@recuperarContrasena')
+        ->name('recuperar');
+
+Route::post('/recuperar/contrasena', 'Apis\Auth\recuperarContrasenaController@cambiarContrasena')
+        ->name('recuperar.contrasena');
 
 Auth::routes();
 

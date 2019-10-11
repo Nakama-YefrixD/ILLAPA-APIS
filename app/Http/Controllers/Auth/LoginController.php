@@ -110,14 +110,32 @@ class LoginController extends Controller
                                     ->first();
 
                 $persona = User::select( "p.imagen as personaImagen",
-                                             "p.nombre as personaNombre" )
+                                            "p.nombre as personaNombre",
+                                            "users.email_verified_at as email_verified_at" )
                                 ->join('personas as p', 'p.id', '=', 'users.persona_id')
                                 ->where('users.id', '=', $user->id)
                                 ->first();
 
+                
+                if($persona->email_verified_at == null){
+                    $verificado = false;
+                }else{
+                    $verificado = true;
+                }
+
                 if ($siAdmin){
 
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>99, "id" =>$siAdmin->id , "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>99, "id" =>$siAdmin->id , 
+                            "nombreLogeado"=>$persona->personaNombre, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+
+                        )
+                    );
                 }
 
 
@@ -127,7 +145,17 @@ class LoginController extends Controller
 
                 if ($siEmpresa){
 
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>1, "id" =>$siEmpresa->id  , "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>1, 
+                            "id" =>$siEmpresa->id, 
+                            "nombreLogeado"=>$persona->personaNombre, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+                        )
+                    );
                 }
 
                 $siSocioFree = sectoristas::where('socio_id', '=', 1)
@@ -136,21 +164,51 @@ class LoginController extends Controller
                                     ->first();
                 if ($siSocioFree){
 
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>5, "id" =>$siSocioFree->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>5, 
+                            "id" =>$siSocioFree->id, 
+                            "nombreLogeado"=>$persona->personaNombre, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+                        )
+                    );
                 }
 
                 $siSocio = socios::where('correo_id', '=', $user->id)
                         ->where('estado','=','1')
                         ->first();
                 if ($siSocio){
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>2, "id" =>$siSocio->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>2, 
+                            "id" =>$siSocio->id, 
+                            "nombreLogeado"=>$persona->personaNombre, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+                        )
+                    );
                 }
                 $siSectorista = sectoristas::where('correo_id', '=', $user->id)
                         ->where('estado','=','1')
                         ->first();
                         
                 if ($siSectorista){
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>3, "id" =>$siSectorista->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>3, 
+                            "id" =>$siSectorista->id, 
+                            "nombreLogeado"=>$persona->personaNombre, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+                        )
+                    );
                 }
 
                 $siGestor = gestores::where('correo_id', '=', $user->id)
@@ -158,11 +216,30 @@ class LoginController extends Controller
                                         ->first();
                 if ($siGestor){
                                 
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>4, "id" =>$siGestor->id, "nombreLogeado"=>$persona->personaNombre, "imagenLogeado"=>$persona->personaImagen ));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>4, 
+                            "id" =>$siGestor->id, 
+                            "nombreLogeado"=>$persona->personaNombre, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+                        )
+                    );
                     
                 }else{
 
-                    return json_encode(array("code" => 1, "api_token"=>$user->api_token, "tipoUsuario"=>99, "id" =>99, "imagenLogeado"=>$persona->personaImagen));
+                    return json_encode(
+                        array(
+                            "code" => 1, 
+                            "api_token"=>$user->api_token, 
+                            "tipoUsuario"=>99, 
+                            "id" =>99, 
+                            "imagenLogeado"=>$persona->personaImagen,
+                            "verificado"    =>$verificado,
+                        )
+                    );
                 }
                 
                 

@@ -19,9 +19,14 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     
 });
 
-// Route::get("/cursos", 'Apis\ApiController@curso');
 
-// Route::get("/registrarget/{dni}/{email}/{pass}", 'Apis\RegisterController@registrarget');
+// REENVIAR CORREO DE CONFIRMACION 
+Route::get(
+        'reenviar/correo/confirmacion/{email}', 
+        'Apis\Auth\correoConfirmacionController@reenviarCorreoConfirmacion'
+);
+
+
 Route::post("/registrarpost", 'Apis\RegisterController@registrarpost');
 Route::post('/loginApi', 'Auth\LoginController@loginApi');
 Route::post('/loginSocialityApi', 'Auth\LoginController@loginSocialityApi');
