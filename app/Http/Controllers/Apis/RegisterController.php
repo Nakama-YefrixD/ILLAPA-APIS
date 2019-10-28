@@ -56,9 +56,9 @@ class RegisterController extends Controller
         $email              = $request->email;
         $pass               = $request->pass;
 
-        $email = User::where('email', '=',$email)
-                    ->first();
-        if($email){
+        $exisEmail = User::where('email', '=',$email)
+                            ->first();
+        if($exisEmail){
             return json_encode(false);
         }
         
