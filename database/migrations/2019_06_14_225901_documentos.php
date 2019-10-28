@@ -18,7 +18,7 @@ class Documentos extends Migration
             $table->unsignedBigInteger('cliente_id');
             // $table->string('tipo', 3);
             $table->unsignedBigInteger('tipoDocumento_id')->nullable();
-            $table->integer('numero');
+            $table->string('numero', 15);
             $table->date('fechaemision');
             $table->date('fechavencimiento');
             // $table->string('moneda', 3);

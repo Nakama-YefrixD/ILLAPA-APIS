@@ -70,3 +70,6 @@ Route::post('/importar/documentos', 'importarSocioController@importarDocumentos'
 
 Route::post('/importar/pagos', 'importarSocioController@importarPagos')
         ->name('importar.importarPagos');
+
+
+Route::get('/dni', 'Apis\RegisterController@dni');

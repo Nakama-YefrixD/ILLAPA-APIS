@@ -20,7 +20,7 @@ class Telefonos extends Migration
             $table->unsignedBigInteger('correo_id');
             $table->string('pais', 45)->nullable();
             $table->string('prefijo', 45)->nullable();
-            $table->integer('numero');
+            $table->bigInteger('numero');
             $table->unsignedBigInteger('tipotelefono_id');
             // $table->string('tipo')->nullable();
             $table->integer('estado');

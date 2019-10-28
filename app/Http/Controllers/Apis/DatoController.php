@@ -208,8 +208,7 @@ class DatoController extends Controller
         $nombre = $request->nombre;
 
         if($tipoIdentificacion == 1 ){
-            $cs = new Dni();
-            $cs->setClient(new ContextClient());
+            $cs = new Dni(new ContextClient(), new DniParser());
 
             $person = $cs->get($dni);
             if ($person === false) {

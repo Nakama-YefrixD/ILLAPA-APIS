@@ -123,9 +123,8 @@ class datosFreeController extends Controller
         
 
         if($tipoIdentificacion == 1 ){
-            $cs = new Dni();
-            $cs->setClient(new ContextClient());
-
+            
+            $cs = new Dni(new ContextClient(), new DniParser());
             $person = $cs->get($dni);
             if ($person === false) {
                 // echo $cs->getError();

@@ -17,7 +17,7 @@ class Pagos extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('documento_id');
             $table->unsignedBigInteger('tipoPago_id')->nullable();
-            $table->integer('numero');
+            $table->string('numero', 15);
             $table->date('fechaemision');
             $table->date('fechavencimiento');
             $table->string('moneda', 3);

@@ -17,7 +17,7 @@ class users extends Seeder
             'persona_id' => 1,
             'email' => 'raulpozogonzalez@gmail.com',
             'estado' => 1,
-            'email_verified_at' => NUll,
+            'email_verified_at' => '2019-09-11',
             'password' => Hash::make('raul123'),
             'api_token' => Str::random(60),
 

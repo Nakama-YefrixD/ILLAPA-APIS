@@ -12,6 +12,7 @@ use App\sectores;
 use App\gestores;
 
 use Peru\Jne\Dni;
+use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
 use Peru\Http\ContextClient;
 
@@ -50,11 +51,16 @@ class RegisterController extends Controller
     public function registrarpost(Request $request)
     {
         $tipoIdentificacion = $request->tipoIdentificacion;
-        $nombreAgregado = $request->nombre;
-        $dni = $request->dni;
-        $email = $request->email;
-        $pass = $request->pass;
+        $nombreAgregado     = $request->nombre;
+        $dni                = $request->dni;
+        $email              = $request->email;
+        $pass               = $request->pass;
 
+        $email = User::where('email', '=',$email)
+                    ->first();
+        if($email){
+            return json_encode(false);
+        }
         
         $siPersona = personas::where('numeroidentificacion', '=', $dni)
                             ->first();
@@ -64,9 +70,8 @@ class RegisterController extends Controller
             $personaId = $siPersona->id;
         }else{
             if($tipoIdentificacion == 1 ){
-                $cs = new Dni();
-                $cs->setClient(new ContextClient());
-    
+                $cs = new Dni(new ContextClient(), new DniParser());
+
                 $person = $cs->get($dni);
                 if ($person === false) {
                     $nombre = $email;
@@ -104,6 +109,8 @@ class RegisterController extends Controller
             $personas->save();
             $personaId = $personas->id;
         }
+
+        
 
         $user = User::create([
                     'persona_id' => $personaId,
@@ -148,7 +155,23 @@ class RegisterController extends Controller
         );
         Mail::to($email)->send(new MensajeEnviado($data));
 
+
         return json_encode($apitoken);
 
+    }
+
+    public function dni()
+    {
+        $dni = '29239705';
+
+        $cs = new Dni(new ContextClient(), new DniParser());
+
+        $person = $cs->get($dni);
+        if (!$person) {
+            echo 'Not found';
+            exit();
+        }
+
+        dd($person);
     }
 }

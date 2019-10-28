@@ -18,7 +18,7 @@ class Direcciones extends Migration
             // $table->unsignedBigInteger('socio_id');
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('correo_id');
-            $table->string('calle', 50);
+            $table->string('calle', 500);
             $table->string('ciudad', 30)->nullable();
             $table->integer('codigopostal')->nullable();
             $table->string('pais')->nullable();
