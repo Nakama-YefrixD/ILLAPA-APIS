@@ -30,6 +30,7 @@ use App\tiposDocumentosIdentidad;
 use App\tiposTelefonos;
 
 use Peru\Jne\Dni;
+use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
 use Peru\Http\ContextClient;
 
