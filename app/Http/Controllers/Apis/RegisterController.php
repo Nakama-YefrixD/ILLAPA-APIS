@@ -14,6 +14,8 @@ use App\gestores;
 use Peru\Jne\Dni;
 use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
+use Peru\Sunat\RucParser;
+use Peru\Sunat\HtmlParser;
 use Peru\Http\ContextClient;
 
 use Illuminate\Support\Str;
@@ -82,9 +84,7 @@ class RegisterController extends Controller
                 
     
             }else if($tipoIdentificacion == 2){
-                $cs = new Ruc();
-                $cs->setClient(new ContextClient());
-    
+                $cs = new Ruc(new ContextClient(), new RucParser(new HtmlParser()));    
                 $company = $cs->get($dni);
                 if ($company === false) {
                     $nombre = $email;
