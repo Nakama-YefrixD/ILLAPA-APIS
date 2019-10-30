@@ -22,6 +22,8 @@ use App\tiposTelefonos;
 use Peru\Jne\Dni;
 use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
+use Peru\Sunat\RucParser;
+use Peru\Sunat\HtmlParser;
 use Peru\Http\ContextClient;
 
 class datosFreeController extends Controller
@@ -137,8 +139,7 @@ class datosFreeController extends Controller
             $nombre = $person->nombres." ".$person->apellidoPaterno." ".$person->apellidoMaterno;
 
         }else if($tipoIdentificacion == 2){
-            $cs = new Ruc();
-            $cs->setClient(new ContextClient());
+            $cs = new Ruc(new ContextClient(), new RucParser(new HtmlParser()));
 
             $company = $cs->get($dni);
             if ($company === false) {

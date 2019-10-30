@@ -84,7 +84,7 @@ class RegisterController extends Controller
                 
     
             }else if($tipoIdentificacion == 2){
-                $cs = new Ruc(new ContextClient(), new RucParser(new HtmlParser()));    
+                $cs = new Ruc(new ContextClient(), new RucParser(new HtmlParser()));
                 $company = $cs->get($dni);
                 if ($company === false) {
                     $nombre = $email;
