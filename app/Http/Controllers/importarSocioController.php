@@ -46,7 +46,7 @@ class importarSocioController extends Controller
     {   
         
         
-        $archivo = "/ExamplesImportacion/D".$nombreExcel.".xlsx";
+        $archivo = public_path(). "/ExamplesImportacion/D".$nombreExcel.".xlsx";
         $objPHPExcel = IOFactory::load($archivo);
         $objPHPExcel->setActiveSheetIndex(0);
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
