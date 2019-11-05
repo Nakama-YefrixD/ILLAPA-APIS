@@ -60,7 +60,11 @@
 
             <div class="form-group">
                 <div class="card-body table-responsive" style="height:50vh" >
-                    <span id="tablasasd"></span>
+                    <table id="tb_excel" class="table table-bordered table-hover display nowrap mb-0" cellspacing="0" width="100%">
+                        <tbody>
+                                
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
@@ -75,4 +79,5 @@
 
 @section('script')
     <script type="text/javascript" src="{{ asset('js/importar/clientes.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/importar/mostrar/controlErrores.js') }}"></script>
 @endsection

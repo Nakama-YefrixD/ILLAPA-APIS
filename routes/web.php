@@ -47,6 +47,26 @@ Route::get('/ejemplos/mostrar/{nombreExcel}', 'importarSocioController@ejemplosi
 Route::get('/ejemplos/descargar/{nombreExcel}', 'importarSocioController@ejemplosimportardescargar')
         ->name('importar.descargar');
  
+// RUTAS DE PREVISUALICION EN CADA CASO PARA SOCIOS
+Route::post('/importar/mostrar/clientes', 'web\mostrar\mostrarSocioController@clientes')
+        ->name('importar.mostrar.clientes'); 
+
+Route::post('/importar/mostrar/correos', 'web\mostrar\mostrarSocioController@correos')
+        ->name('importar.mostrar.correos'); 
+
+Route::post('/importar/mostrar/telefonos', 'web\mostrar\mostrarSocioController@telefonos')
+        ->name('importar.mostrar.telefonos'); 
+
+Route::post('/importar/mostrar/direcciones', 'web\mostrar\mostrarSocioController@direcciones')
+        ->name('importar.mostrar.direcciones');
+
+Route::post('/importar/mostrar/documentos', 'web\mostrar\mostrarSocioController@documentos')
+        ->name('importar.mostrar.documentos');
+
+Route::post('/importar/mostrar/pagos', 'web\mostrar\mostrarSocioController@pagos')
+        ->name('importar.mostrar.pagos');
+
+
 Route::get('/importar/datos', 'importarSocioController@datos')
         ->name('importar.datos'); 
 

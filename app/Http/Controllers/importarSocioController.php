@@ -111,10 +111,8 @@ class importarSocioController extends Controller
         $objPHPExcel->setActiveSheetIndex(0);
         $numRows = $objPHPExcel->setActiveSheetIndex(0)->getHighestRow();
         $ultimaColumna = $objPHPExcel->setActiveSheetIndex(0)->getHighestColumn();
-        
-        
 
-        $tabla = '<table class="table table-striped table-bordered table-hover'; 
+        $tabla = '<table class="table table-bordered table-hover'; 
         $tabla .= 'display nowrap mb-0" cellspacing="0" width="100%"><tbody>';
 
         for ($i=1; $i <=$numRows ; $i++) {

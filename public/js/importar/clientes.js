@@ -3,6 +3,8 @@ $(document).ready(function() {
     $("#subirLista").on("change", function() {
         event.preventDefault();
         var formData = new FormData($("#insertarExcel")[0]);
+        let url = $('#seleccionarTipoExcel').val();
+        url = "/importar/mostrar/"+url
         $.confirm({
             icon: 'fa fa-check',
             title: 'Previsualización lista.!',
@@ -16,7 +18,7 @@ $(document).ready(function() {
             content: function() {
                 var self = this;
                 return $.ajax({
-                    url: "mostrarExcel",
+                    url: url,
                     type: "POST",
                     data: formData,
                     contentType: false,
@@ -28,7 +30,8 @@ $(document).ready(function() {
                                 $('#tabla').html(data.mensaje);
                                 
                             }else{
-                                $('#tablasasd').html(data.mensaje);
+                                $('#tb_excel tbody').html(data.mensaje);
+                                // $('#tablasasd').html(data.mensaje);
                                 toastr.success("El excel a sido agregada correctamente", "Acción Realizada");
                             }
                         }
@@ -36,8 +39,6 @@ $(document).ready(function() {
             }
         });
     });
-
-
 
     $('#insertarExcel').on('click', '.agregarExcel',function(event){
         event.preventDefault();
