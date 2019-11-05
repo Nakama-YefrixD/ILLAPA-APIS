@@ -10,7 +10,7 @@ use App\tiposDocumentosIdentidad;
 use App\sectores;
 use App\personas;
 use App\tipostelefonos;
-use App\tiposdocumentos;
+use App\tiposDocumentos;
 use App\tiposMonedas;
 
 use Peru\Jne\Dni;
@@ -510,7 +510,7 @@ class mostrarSocioController extends Controller
                 $tabla .= '<td tipoError="ERROR" error="El tipo de identificación no existe o esta mal escrito" style="background:red;">'.$numeroIdentificacion.'</td>';
             }
 
-            $siTipoDocumento = tiposdocumentos::where('nombre', $tipoDocumento)->first();
+            $siTipoDocumento = tiposDocumentos::where('nombre', $tipoDocumento)->first();
             if($siTipoDocumento){
                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoDocumento.'</td>';
             }else{
@@ -610,7 +610,7 @@ class mostrarSocioController extends Controller
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$numeroIdentificacion.'</td>';
                                 
-                                $siTipoDocumento = tiposdocumentos::where('nombre', $tipoDocumento)->first();
+                                $siTipoDocumento = tiposDocumentos::where('nombre', $tipoDocumento)->first();
                                 if($siTipoDocumento){
                                     $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoDocumento.'</td>';
                                     $siDocumento = documentos::where('cliente_id', $exisCliente->id)
