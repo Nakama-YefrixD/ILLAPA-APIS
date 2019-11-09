@@ -524,6 +524,7 @@ class GestionController extends Controller
                                                 'documentos.id as id', 'tm.nombre as moneda')
                                         ->join('tiposDocumentos as td','td.id', '=', 'documentos.tipoDocumento_id' )
                                         ->join('tiposMonedas as tm','tm.id', '=', 'documentos.tipoMoneda_id' )
+                                        ->where('documentos.saldo', '>', 0)
                                         ->where('cliente_id', '=', $clienteId)
                                         ->get();
 
@@ -534,6 +535,7 @@ class GestionController extends Controller
                                         ->join('tiposDocumentos as td','td.id', '=', 'documentos.tipoDocumento_id' )
                                         ->join('tiposMonedas as tm','tm.id', '=', 'documentos.tipoMoneda_id' )
                                         ->where('cliente_id', '=', $clienteId)
+                                        ->where('documentos.saldo', '>', 0)
                                         ->orderby('documentos.fechavencimiento')
                                         ->get();
 
@@ -547,6 +549,7 @@ class GestionController extends Controller
                                     ->leftJoin('pagos as p', 'documentos.id', '=', 'p.documento_id')
                                     ->leftJoin('tiposPagos as tp', 'tp.id', '=', 'p.tipoPago_id')                                
                                     ->where('documentos.cliente_id', '=', $clienteId)
+                                    ->where('documentos.saldo', '>', 0)
                                     ->get();
 
         

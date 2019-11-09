@@ -42,6 +42,14 @@
             </a>
           </li>
 
+          <li class="nav-header">CONTROL</li>
+          <li class="nav-item">
+            <a href="{{route ('control.clientes')}}" class="nav-link">
+              <i class="nav-icon far fa-file-excel"></i>
+              <p>Clientes</p>
+            </a>
+          </li>
+
           
 
           

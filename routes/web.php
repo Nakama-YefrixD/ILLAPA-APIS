@@ -92,4 +92,10 @@ Route::post('/importar/pagos', 'importarSocioController@importarPagos')
         ->name('importar.importarPagos');
 
 
+// CONTROL
+// CONTROL CLIENTES
+Route::get('/control/clientes', 'web\control\clientesController@index')
+        ->name('control.clientes');
+
+
 Route::get('/dni', 'Apis\RegisterController@dni');

@@ -155,10 +155,6 @@ class importarController extends Controller
             $socio = socios::where('correo_id','=',$userId)
                                 ->first();
             
-
-           
-            
-
             for ($i=2; $i <= $numRows ; $i++) {
                 
                 $tipoIdentificacion = $objPHPExcel->getActiveSheet()->getCell('a'.$i)->getCalculatedValue();

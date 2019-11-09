@@ -194,6 +194,7 @@ class gestorEmpresasController extends Controller
                                                         ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                         ->join('gestores as g', 'sct.id', '=', 'g.sector_id')
                                                         ->where('g.id', '=', $gestorId)
+                                                        ->where('documentos.saldo', '>', 0)
                                                         ->get();
         
         

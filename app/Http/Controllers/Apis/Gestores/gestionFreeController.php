@@ -326,6 +326,7 @@ class gestionFreeController extends Controller
                                                 ->join('clientes as c', 'c.id', '=', 'documentos.cliente_id')
                                                 ->join('sectores as sct', 'sct.id', '=', 'c.sector_id')
                                                 ->where('sct.id', '=', $sectoristaId)
+                                                ->where('documentos.saldo', '>', 0)
                                                 ->get();
         
         
