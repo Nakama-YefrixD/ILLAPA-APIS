@@ -12,7 +12,7 @@ use App\personas;
 use App\tipostelefonos;
 use App\tiposDocumentos;
 use App\tiposMonedas;
-
+use App\User;
 use Peru\Jne\Dni;
 use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
