@@ -13,6 +13,16 @@ use App\tipostelefonos;
 use App\tiposDocumentos;
 use App\tiposMonedas;
 use App\User;
+use App\clientes;
+use App\tiposPagos;
+use App\pagos;
+
+use App\correos;
+use App\telefonos;
+use App\direcciones;
+use App\documentos;
+use App\empresas;
+
 use Peru\Jne\Dni;
 use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
