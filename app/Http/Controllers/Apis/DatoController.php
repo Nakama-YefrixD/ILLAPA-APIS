@@ -33,6 +33,8 @@ use Peru\Jne\Dni;
 use Peru\Jne\DniParser;
 use Peru\Sunat\Ruc;
 use Peru\Http\ContextClient;
+use Peru\Sunat\HtmlParser; 
+use Peru\Sunat\RucParser;
 
 
 
@@ -212,24 +214,36 @@ class DatoController extends Controller
             $cs = new Dni(new ContextClient(), new DniParser());
 
             $person = $cs->get($dni);
-            if ($person === false) {
+            if ($person == false) {
                 // echo $cs->getError();
                 
-                return json_encode(array("code" => false, "existente"=>false , "load"=>true ));
+                return json_encode(
+                    array(
+                        "code"      => false, 
+                        "existente" =>false , 
+                        "load"      =>true 
+                    )
+                );
+
                 exit();
                 
             }
             $nombre = $person->nombres." ".$person->apellidoPaterno." ".$person->apellidoMaterno;
 
         }else if($tipoIdentificacion == 2){
-            $cs = new Ruc();
-            $cs->setClient(new ContextClient());
+            $cs = new Ruc(new ContextClient(), new RucParser(new HtmlParser()));
 
             $company = $cs->get($dni);
-            if ($company === false) {
+            if ($company == false) {
                 // echo $cs->getError();
                 
-                return json_encode(array("code" => false, "existente"=>false , "load"=>true ));
+                return json_encode(
+                    array(
+                        "code" => false, 
+                        "existente"=>false , 
+                        "load"=>true 
+                    )
+                );
                 exit();
             }
             
@@ -289,7 +303,14 @@ class DatoController extends Controller
             }
         }
 
-        return json_encode(array("code" => false, "existente"=>true , "nombre"=>$nombre, "load"=>true ));
+        return json_encode(
+            array(
+                "code"      => false  , 
+                "existente" => true   , 
+                "nombre"    => $nombre, 
+                "load"      => true 
+            )
+        );
     }
 
     public function mostrarSectores($socioId)
