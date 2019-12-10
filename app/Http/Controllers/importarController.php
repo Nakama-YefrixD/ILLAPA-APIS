@@ -181,15 +181,14 @@ class importarController extends Controller
                     $sectorId = $sector->id; 
                     
                 }else{
-
                     $sectorNuevo = new sectores;
                     $sectorNuevo->socio_id      = $socio->id;
                     $sectorNuevo->sectorista_id = null;
                     $sectorNuevo->descripcion   = $sectorNombre;
                     $sectorNuevo->estado        = 0;
                     $sectorNuevo->estSectorista = 0;
-                    $sectorNuevo->estGestor     = 0;                   
-
+                    $sectorNuevo->estGestor     = 0;
+                    $sectorNuevo->save();
                 }
                 
                 
