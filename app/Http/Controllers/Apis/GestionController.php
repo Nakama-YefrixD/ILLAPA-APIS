@@ -369,8 +369,9 @@ class GestionController extends Controller
                             ->where('clientes.estado', '=', 1)
                             ->where('s.id', '=', $socioId)
                             ->where('d.saldo','>',0)
+                            ->where('d.fechavencimiento', '<', $fechaActual)
                             ->groupBy('clientes.id')
-                            ->paginate(10);
+                            ->get();
 
                             
         
@@ -395,15 +396,7 @@ class GestionController extends Controller
 
             $cont = 0;
             foreach($clientesSocio as $clientesSocios){
-
-                $listClientesSocio[$cont]['sectorId'] = $clientesSocios->sectorId;
-                $listClientesSocio[$cont]['clienteId'] = $clientesSocios->clienteId;
-                $listClientesSocio[$cont]['socioId'] = $clientesSocios->socioId;
-                $listClientesSocio[$cont]['personaNombre'] = $clientesSocios->personaNombre;
-                $listClientesSocio[$cont]['personaImagen'] = $clientesSocios->personaImagen;
-                $listClientesSocio[$cont]['numeroDocumentos'] = $clientesSocios->numeroDocumentos;
-                $listClientesSocio[$cont]['sumaImportesDocumentos'] = $clientesSocios->sumaImportesDocumentos;
-                
+ 
                 $fechaProrroga = acciones::select('fechaprorroga as accionesFechaProrroga')
                                             ->where('cliente_id', '=', $clientesSocios->clienteId)
                                             ->latest()
@@ -441,22 +434,34 @@ class GestionController extends Controller
                                         ->first();
 
 
+                if($clienteSocio['numeroDocumentosVencidos'] > 0 ){
+
+                    $listClientesSocio[$cont]['sectorId'] = $clientesSocios->sectorId;
+                    $listClientesSocio[$cont]['clienteId'] = $clientesSocios->clienteId;
+                    $listClientesSocio[$cont]['socioId'] = $clientesSocios->socioId;
+                    $listClientesSocio[$cont]['personaNombre'] = $clientesSocios->personaNombre;
+                    $listClientesSocio[$cont]['personaImagen'] = $clientesSocios->personaImagen;
+                    $listClientesSocio[$cont]['numeroDocumentos'] = $clientesSocios->numeroDocumentos;
+                    $listClientesSocio[$cont]['sumaImportesDocumentos'] = $clientesSocios->sumaImportesDocumentos;
+
+                    $contDocumentosVencidos = 0;
+                    if($clienteSocio['numeroDocumentosVencidos'] != null){
+                        $contDocumentosVencidos = $clienteSocio['numeroDocumentosVencidos'];
+                    }
+                    $listClientesSocio[$cont]['numeroDocumentosVencidos'] = $contDocumentosVencidos;
+
+                    $sumaImportesDocumentosVencidos = 0;
+                    if($clienteSocio['sumaImportesDocumentosVencidos'] != null){
+                        $sumaImportesDocumentosVencidos = $clienteSocio['sumaImportesDocumentosVencidos'];
+                    }
+                    $listClientesSocio[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f",$sumaImportesDocumentosVencidos);
+
+
+                    $cont = $cont+1;
+
+                }
+
                 
-
-                $contDocumentosVencidos = 0;
-                if($clienteSocio['numeroDocumentosVencidos'] != null){
-                    $contDocumentosVencidos = $clienteSocio['numeroDocumentosVencidos'];
-                }
-                $listClientesSocio[$cont]['numeroDocumentosVencidos'] = $contDocumentosVencidos;
-
-                $sumaImportesDocumentosVencidos = 0;
-                if($clienteSocio['sumaImportesDocumentosVencidos'] != null){
-                    $sumaImportesDocumentosVencidos = $clienteSocio['sumaImportesDocumentosVencidos'];
-                }
-                $listClientesSocio[$cont]['sumaImportesDocumentosVencidos'] = sprintf("%.2f",$sumaImportesDocumentosVencidos);
-
-
-                $cont = $cont+1;
             }
         }
 
