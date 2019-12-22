@@ -281,7 +281,6 @@ class GestionController extends Controller
 
     }
 
-
     public function mostrarClientes($socioId)
     {
 
@@ -401,13 +400,19 @@ class GestionController extends Controller
                                             ->where('cliente_id', '=', $clientesSocios->clienteId)
                                             ->latest()
                                             ->first();
-                if($fechaProrroga){
+                if($fechaProrroga){ 
                     if($fechaProrroga->accionesFechaProrroga == null){
                         $fecha = $fechaActual;
                         $signo = '<';
                     }else{
-                        $fecha = $fechaProrroga->accionesFechaProrroga;
-                        $signo = '>';
+                        if($fechaActual > $fechaProrroga->accionesFechaProrroga ){
+                            $fecha = $fechaActual;
+                            $signo = '<';
+                        }else{
+                            $fecha = $fechaProrroga->accionesFechaProrroga;
+                            $signo = '>';
+                        }
+                        
                     }
                     
                     
@@ -600,7 +605,6 @@ class GestionController extends Controller
 
     }
     
-
     public function datosCliente($idCliente)
     {
         $telefonosCliente = telefonos::where('cliente_id', '=', $idCliente)
@@ -1028,7 +1032,6 @@ class GestionController extends Controller
         }
     }
 
-    
     public function filtroMayorSec($idSec)
     {
 
