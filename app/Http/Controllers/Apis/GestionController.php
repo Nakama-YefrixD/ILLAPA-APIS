@@ -405,7 +405,7 @@ class GestionController extends Controller
                         $fecha = $fechaActual;
                         $signo = '<';
                     }else{
-                        if($fechaActual > $fechaProrroga->accionesFechaProrroga ){
+                        if($fechaActual >= $fechaProrroga->accionesFechaProrroga ){
                             $fecha = $fechaActual;
                             $signo = '<';
                         }else{
