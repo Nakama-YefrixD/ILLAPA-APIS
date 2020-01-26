@@ -45,7 +45,7 @@ Route::middleware('auth:api')->get('/filtroMayor/sectorista/{idSectorista}', 'Ap
 
 
 Route::middleware('auth:api')->get('/sociosTodos/{empresaid}', 'Apis\GestionController@mostrarSocios');
-Route::middleware('auth:api')->get('/clientesTodos/{socioid}', 'Apis\GestionController@mostrarClientes');
+Route::middleware('auth:api')->get('/clientesTodos/{socioid}/{nombreCliente}', 'Apis\GestionController@mostrarClientes');
 Route::middleware('auth:api')->get('/sectoresTodos/{socioId}', 'Apis\GestionController@mostrarSectores');
 Route::middleware('auth:api')->post('/filtroClientesSector', 'Apis\GestionController@filtroClientesSector');
 

@@ -281,7 +281,7 @@ class GestionController extends Controller
 
     }
 
-    public function mostrarClientes($socioId)
+    public function mostrarClientes($socioId, $nombreCliente)
     {
 
         $fechaActual = date('Y-m-d');
@@ -369,8 +369,13 @@ class GestionController extends Controller
                             ->where('s.id', '=', $socioId)
                             ->where('d.saldo','>',0)
                             ->where('d.fechavencimiento', '<', $fechaActual)
+                            ->where(function ($query) use($nombreCliente) {
+                                if($nombreCliente != '') {
+                                    $query->where('p.nombre', 'like', '%' . $nombreCliente . '%');
+                                }
+                            })
                             ->groupBy('clientes.id')
-                            ->get();
+                            ->paginate(10);
 
                             
         

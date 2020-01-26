@@ -99,3 +99,6 @@ Route::get('/control/clientes', 'web\control\clientesController@index')
 
 
 Route::get('/dni', 'Apis\RegisterController@dni');
+
+// PRUEBAS
+Route::get('/nuevaprueba', 'pruebasController@duplicados');
