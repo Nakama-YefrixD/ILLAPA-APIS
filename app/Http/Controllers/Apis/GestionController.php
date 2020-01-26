@@ -370,7 +370,7 @@ class GestionController extends Controller
                             ->where('d.saldo','>',0)
                             ->where('d.fechavencimiento', '<', $fechaActual)
                             ->where(function ($query) use($nombreCliente) {
-                                if($nombreCliente != '') {
+                                if($nombreCliente != '' || $nombreCliente != null || $nombreCliente != 'null') {
                                     $query->where('p.nombre', 'like', '%' . $nombreCliente . '%');
                                 }
                             })
