@@ -174,7 +174,7 @@ class mostrarSocioController extends Controller
                         $sectores = sectores::where('socio_id','=',$socio->id)
                                                 ->get();
 
-                        for($x = 0; $x <= sizeof($sectores); $x++ ){
+                        for($x = 0; $x < sizeof($sectores); $x++ ){
                             
                             $exisCliente= clientes::where('correo_id', '=', $userId )
                                                 ->where('sector_id','=',$sectores[$x]['id'])
@@ -184,7 +184,7 @@ class mostrarSocioController extends Controller
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$numeroIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$correo.'</td>';
                                 break;
-                            }else if($x == sizeof($sectores)){
+                            }else if($x == sizeof($sectores)-1 ){
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="ERROR" error="El cliente no existe o esta mal escrito" style="background:red;">'.$numeroIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="ERROR" error="El numero de identificación no existe o esta mal escrito" style="background:red;">'.$correo.'</td>';
@@ -267,7 +267,7 @@ class mostrarSocioController extends Controller
                         $sectores = sectores::where('socio_id','=',$socio->id)
                                                 ->get();
 
-                        for($x = 0; $x <= sizeof($sectores); $x++ ){
+                        for($x = 0; $x < sizeof($sectores); $x++ ){
                             
                             $exisCliente= clientes::where('correo_id', '=', $userId )
                                                 ->where('sector_id','=',$sectores[$x]['id'])
@@ -276,7 +276,7 @@ class mostrarSocioController extends Controller
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$numeroIdentificacion.'</td>';
                                 break;
-                            }else if($x == sizeof($sectores)){
+                            }else if($x == sizeof($sectores)-1 ){
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="ERROR" error="El cliente no existe o esta mal escrito" style="background:red;">'.$numeroIdentificacion.'</td>';
                                 break;
@@ -379,7 +379,7 @@ class mostrarSocioController extends Controller
                         $sectores = sectores::where('socio_id','=',$socio->id)
                                                 ->get();
 
-                        for($x = 0; $x <= sizeof($sectores); $x++ ){
+                        for($x = 0; $x < sizeof($sectores); $x++ ){
                             
                             $exisCliente= clientes::where('correo_id', '=', $userId )
                                                 ->where('sector_id','=',$sectores[$x]['id'])
@@ -388,7 +388,7 @@ class mostrarSocioController extends Controller
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$numeroIdentificacion.'</td>';
                                 break;
-                            }else if($x == sizeof($sectores)){
+                            }else if($x == sizeof($sectores)-1 ){
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="ERROR" error="El cliente no existe o esta mal escrito" style="background:red;">'.$numeroIdentificacion.'</td>';
                                 break;
@@ -491,7 +491,7 @@ class mostrarSocioController extends Controller
                         $sectores = sectores::where('socio_id','=',$socio->id)
                                                 ->get();
 
-                        for($x = 0; $x <= sizeof($sectores); $x++ ){
+                        for($x = 0; $x < sizeof($sectores); $x++ ){
                             
                             $exisCliente= clientes::where('correo_id', '=', $userId )
                                                 ->where('sector_id','=',$sectores[$x]['id'])
@@ -500,7 +500,7 @@ class mostrarSocioController extends Controller
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$numeroIdentificacion.'</td>';
                                 break;
-                            }else if($x == sizeof($sectores)){
+                            }else if($x == sizeof($sectores)-1 ){
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="ERROR" error="El cliente no existe o esta mal escrito" style="background:red;">'.$numeroIdentificacion.'</td>';
                                 break;
@@ -611,7 +611,7 @@ class mostrarSocioController extends Controller
                         $sectores = sectores::where('socio_id','=',$socio->id)
                                                 ->get();
 
-                        for($x = 0; $x <= sizeof($sectores); $x++ ){
+                        for($x = 0; $x < sizeof($sectores); $x++ ){
                             
                             $exisCliente= clientes::where('correo_id', '=', $userId )
                                                 ->where('sector_id','=',$sectores[$x]['id'])
@@ -637,7 +637,7 @@ class mostrarSocioController extends Controller
                                     $tabla .= '<td tipoError="ERROR" error="El tipo de documento no existe o esta mal escrito" style="background:red;">'.$tipoDocumento.'</td>';
                                 }
                                 break;
-                            }else if($x == sizeof($sectores)){
+                            }else if($x == sizeof($sectores)-1 ){
                                 $tabla .= '<td tipoError="BIEN" error="Sin errores">'.$tipoIdentificacion.'</td>';
                                 $tabla .= '<td tipoError="ERROR" error="El cliente no existe o esta mal escrito" style="background:red;">'.$numeroIdentificacion.'</td>';
                                 break;
