@@ -9,7 +9,7 @@ use App\socios;
 use App\tiposDocumentosIdentidad;
 use App\sectores;
 use App\personas;
-use App\tipostelefonos;
+use App\tiposTelefonos;
 use App\tiposDocumentos;
 use App\tiposMonedas;
 use App\User;
