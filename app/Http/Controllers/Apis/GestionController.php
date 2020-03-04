@@ -652,10 +652,10 @@ class GestionController extends Controller
 
     public function agregarAccion(Request $request)
     {
-
-        $clienteId = $request->clienteId;
-        $tipoAccion = $request->tipoAccion;
-        $descripcion = $request->descripcion;
+        $idUsuario          = $request->idUsuario;
+        $clienteId          = $request->clienteId;
+        $tipoAccion         = $request->tipoAccion;
+        $descripcion        = $request->descripcion;
         $fechaActualSistema = $request->fechaActualSistema;
         
         // $idDocumento = $request->documentoId;
@@ -702,8 +702,9 @@ class GestionController extends Controller
         }
 
         $accionCliente = new acciones;
-        $accionCliente->cliente_id = $clienteId;
-        $accionCliente->tipoAccion_id = $tipoAccion;
+        $accionCliente->correo_id       = $idUsuario;
+        $accionCliente->cliente_id      = $clienteId;
+        $accionCliente->tipoAccion_id   = $tipoAccion;
         
         // $accionCliente->documento_id = $idDocumento;
         $accionCliente->descripcion = $descripcion;

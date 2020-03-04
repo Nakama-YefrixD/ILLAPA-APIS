@@ -15,6 +15,7 @@ class Acciones extends Migration
     {
         Schema::create('acciones', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->unsignedBigInteger('correo_id')->nullable();
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('tipoAccion_id');
             // $table->date('fecha');
@@ -33,6 +34,7 @@ class Acciones extends Migration
             $table->integer('estado');
             $table->timestamps();
 
+            $table->foreign('correo_id')->references('id')->on('users');
             $table->foreign('cliente_id')->references('id')->on('clientes');
             $table->foreign('tipoAccion_id')->references('id')->on('tiposAcciones');
             // $table->foreign('documento_id')->references('id')->on('documentos');
