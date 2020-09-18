@@ -71,7 +71,7 @@ class RegisterController extends Controller
 
             $personaId = $siPersona->id;
         }else{
-            if($tipoIdentificacion == 1 ){
+            if($tipoIdentificacion == 1 ){ // 1 -> DNI
                 $cs = new Dni(new ContextClient(), new DniParser());
 
                 $person = $cs->get($dni);
@@ -83,7 +83,7 @@ class RegisterController extends Controller
                 }
                 
     
-            }else if($tipoIdentificacion == 2){
+            }else if($tipoIdentificacion == 2){ // RUC
                 $cs = new Ruc(new ContextClient(), new RucParser(new HtmlParser()));
                 $company = $cs->get($dni);
                 if ($company === false) {

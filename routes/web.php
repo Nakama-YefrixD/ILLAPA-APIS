@@ -102,3 +102,7 @@ Route::get('/dni', 'Apis\RegisterController@dni');
 
 // PRUEBAS
 Route::get('/nuevaprueba', 'pruebasController@duplicados');
+
+
+
+Route::post('/pruebadesubirgit', 'pruebasController@duplicados');
