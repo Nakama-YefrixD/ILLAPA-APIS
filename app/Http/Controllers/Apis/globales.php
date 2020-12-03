@@ -11,7 +11,7 @@ class globales extends Controller
 {
     public function tiposDocumentosIdentidad()
     {
-        $tipos = tiposDocumentosIdentidad::select('id','nombre')
+        $tipos = tiposDocumentosIdentidad::select('id','nombre', 'estado')
                                             ->where('estado', '=', 1)
                                             ->get();
 
