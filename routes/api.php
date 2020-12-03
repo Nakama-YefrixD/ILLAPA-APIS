@@ -32,6 +32,9 @@ Route::post('/loginApi', 'Auth\LoginController@loginApi');
 Route::post('/loginSocialityApi', 'Auth\LoginController@loginSocialityApi');
 
 Route::get('tiposDocumentosIdentidad', 'Apis\globales@tiposDocumentosIdentidad');
+Route::get('pruebaapi', 'Apis\pruebaapi@MostrarAcciones');
+
+// producion.ansera.pe.com/api/pruebaapi
 
 
 // GESTION
